@@ -6,18 +6,30 @@ Created on Thu Nov 21 15:13:17 2019
 """
 
 import numpy as np
-from psychopy import data, visual, event
+from psychopy import data, visual, event, monitors
 
 try:
-    win = visual.Window(color = [0, 0, 0])
+    mon1 = monitors.Monitor('whiteOLED_1_SADK_luma1200')  #Allows access to calibration/screen information
+
+    mon2 = monitors.Monitor('whiteOLED_2_SADK_luma1200')  #Allows access to calibration/screen information
     
-    shape1 = visual.ShapeStim(win,
+    win1 = visual.Window(size = mon1.getSizePix(),
+                        monitor = mon1,
+                        winType = "pyglet",
+                        screen = 2)
+                        
+    win2 = visual.Window(size = mon2.getSizePix(),
+                        monitor = mon2,
+                        winType = "pyglet",
+                        screen = 1)
+    
+    shape1 = visual.ShapeStim(win1,
                              units = "pix",
                              vertices = ((-100, 0), (100, 0)),
                              lineColor = [1, -1, -1],
                              )
                              
-    shape2 = visual.ShapeStim(win,
+    shape2 = visual.ShapeStim(win2,
                              units = "pix",
                              vertices = ((-100, 0), (100, 0)),
                              lineColor = [-1, 1, -1],
