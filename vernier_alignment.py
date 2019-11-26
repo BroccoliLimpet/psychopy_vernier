@@ -11,7 +11,14 @@ from psychopy import data, visual, event
 try:
     win = visual.Window(color = [0, 0, 0])
     
-    shape = visual.ShapeStim(win,
+    shape1 = visual.ShapeStim(win,
+                             units = "pix",
+                             vertices = ((-100, 0), (100, 0)),
+                             lineColor = [-1, -1, -1],
+                             )
+                             
+    shape2 = visual.ShapeStim(win,
+                             units = "pix",
                              vertices = ((-100, 0), (100, 0)),
                              lineColor = [-1, -1, -1],
                              )
@@ -38,7 +45,7 @@ except:
     print("Error in set-up")
     
 else:
-    shape.draw()
+    shape1.draw()
     win.flip()
                                          
     for this_trial in trial_data:
