@@ -14,13 +14,13 @@ try:
     shape1 = visual.ShapeStim(win,
                              units = "pix",
                              vertices = ((-100, 0), (100, 0)),
-                             lineColor = [-1, -1, -1],
+                             lineColor = [1, -1, -1],
                              )
                              
     shape2 = visual.ShapeStim(win,
                              units = "pix",
                              vertices = ((-100, 0), (100, 0)),
-                             lineColor = [-1, -1, -1],
+                             lineColor = [-1, 1, -1],
                              )
     
     
@@ -38,9 +38,9 @@ try:
         trial_list.append(trial)
         
     trial_data = data.TrialHandler(trial_list,
-                                            N_REPS,
-                                            method = 'random',
-                                            )
+                                    N_REPS,
+                                    method = 'random',
+                                    )
 except:
     print("Error in set-up")
     
@@ -51,10 +51,12 @@ else:
     for this_trial in trial_data:
     #    print(this_trial['offset'])
     #    trial_data.addData('position', np.random.randint(0,9))
-        shape.pos = (0, np.random.randint(-20,20))
-        shape.draw()
+        shape1.pos = (0, this_trial['position'])
+        shape1.draw()
+        shape2.pos = (0, this_trial['position'] + this_trial['offset'])
+        shape2.draw()
         win.flip()
-        choice = event.waitKeys()
+        choice = event.waitKeys(keyList = ['up','down'])
         trial_data.addData('choice', choice)
         
     win.close()    
