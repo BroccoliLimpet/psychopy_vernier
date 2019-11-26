@@ -24,16 +24,17 @@ try:
                              )
     
     
-    
+    MIN_POS = -20
+    MAX_POS = 20
     OFFSETS = np.arange(-10,12,2)
     trial = {}
     trial_list = []
-    N_REPS = 1
+    N_REPS = 3
     
-    for value in OFFSETS:
+    for offset in OFFSETS:
         trial = {
-            'offset' : value,
-            'position' : np.random.randint(-20, 20)
+            'offset' : offset,
+            'position' : np.random.randint(MIN_POS, MAX_POS)
         }
         trial_list.append(trial)
         
@@ -56,12 +57,16 @@ else:
         shape2.pos = (0, this_trial['position'] + this_trial['offset'])
         shape2.draw()
         win.flip()
-        choice = event.waitKeys(keyList = ['up','down'])
+        if event.waitKeys(keyList = ['up','down'])[0] == 'up':
+            choice = 'above'
+        else:
+            choice = 'below'
         trial_data.addData('choice', choice)
         
     win.close()    
     
-    trial_data.saveAsText(fileName = 'testData',
-                          dataOut = 'n')
+    trial_data.saveAsText(fileName = 'vernier_data',
+                          stimOut = ['offset', 'position'],
+                          dataOut = ['choice_raw'])
     
 #    trial_data.saveAsExcel(fileName = 'testData')
