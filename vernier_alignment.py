@@ -21,45 +21,58 @@ import traceback
 # try/except to prevent window being presented if there is an error in 
 try:
     # Gain access to calibration/screen information
-    mon1 = monitors.Monitor('whiteOLED_1_SADK_luma1200')  
-    mon2 = monitors.Monitor('whiteOLED_2_SADK_luma1200')  
+    mon1 = monitors.Monitor('whiteOLED_2_SADK_luma1200')  
+    mon2 = monitors.Monitor('whiteOLED_1_SADK_luma1200')  
     
     # Initialise windows  
     win1 = visual.Window(size = mon1.getSizePix(),
                         monitor = mon1,
                         winType = "pyglet",
-                        screen = 2)
+                        screen = 1,
+                        color = [0.2, 0.2, 0.2])
                      
     win2 = visual.Window(size = mon2.getSizePix(),
                         monitor = mon2,
                         winType = "pyglet",
-                        screen = 1)
+                        screen = 2,
+                        color = [1, 1, 1])
+    
+    # constants
+    MIN_POS = -20   # minimum central position of line pair
+    MAX_POS = 20    # maximum central position of line pair
+    OFFSET_LOW = -10   # largest negative offset (i.e. green below red)
+    OFFSET_HIGH = 10   # largest positive offset
+    OFFSET_STEP_SIZE = 2  # offset increment
+    OFFSETS = np.arange(OFFSET_LOW, OFFSET_HIGH + OFFSET_STEP_SIZE, OFFSET_STEP_SIZE)   # generate array of possible offset values
+    N_REPS = 5  # trial repeats
+    KEY_LIST = ['num_1','num_2','num_3','num_7','num_8','num_9','escape']    # possible keyboard entries
+    LINE_WIDTH = 5 # width of line
+    LINE_LENGTH = 300   # length of line
+    LINE_VERTICES = ((-LINE_LENGTH/2, 0), (LINE_LENGTH/2, 0))   # line coordinates
+    LINE_DISPLACEMENT = 25  # separation of line ends
+    # variables
+    trial = {}  # initialise trial parameters dictionary
+    trial_list = [] # initialise list of dictionaries
+    
     
     # Create lines to be presented on screens
-    
-    LINE_WIDTH = 10
     shape1 = visual.ShapeStim(win1,
                              units = "pix",
                              lineWidth = LINE_WIDTH,
-                             vertices = ((-100, 0), (100, 0)),
-                             lineColor = [1, -1, -1],
+                             vertices = LINE_VERTICES,
+                             lineColor = [-1, -1, -1],   # adust brightness (correct terminology? probs not)
+                             pos = (LINE_LENGTH/2 + LINE_DISPLACEMENT, 0), # one of the screens is viewed backwards...88
                              )
                              
     shape2 = visual.ShapeStim(win2,
                              units = "pix",
                              lineWidth = LINE_WIDTH,
-                             vertices = ((-100, 0), (100, 0)),
+                             vertices = LINE_VERTICES,
                              lineColor = [-1, 1, -1],
+                             pos = (LINE_LENGTH/2 + LINE_DISPLACEMENT, 0),
                              )
     
-    # constants
-    MIN_POS = -20
-    MAX_POS = 20
-    OFFSETS = np.arange(-10,12,2)
-    trial = {}
-    trial_list = []
-    N_REPS = 1
-    KEY_LIST = ['num_1','num_2','num_3','num_7','num_8','num_9']
+ 
     
     # build trial parameter dictionaries for psychopy's 'TrialHandler'
     for offset in OFFSETS:
@@ -76,31 +89,37 @@ try:
 except Exception:
     traceback.print_exc()
     
-    
 else:
-    for this_trial in trial_data:
-        shape1.pos = (0, this_trial['position'])
-        shape1.draw()
+    try:
+        for this_trial in trial_data:
+            shape1.pos = shape1.pos + (0, this_trial['position'])
+            shape1.draw()
+            
+            shape2.pos = shape2.pos + (0, this_trial['position'] + this_trial['offset'])
+            shape2.draw()
+            
+            win1.flip()
+            win2.flip()
+            
+            SUBJ_INPUT = event.waitKeys(keyList = KEY_LIST)
+            if SUBJ_INPUT[0] in KEY_LIST[0:3]:
+                choice = 'below'
+            elif SUBJ_INPUT[0] in KEY_LIST[3:6]:
+                choice = 'above'
+            elif SUBJ_INPUT[0] == 'escape':
+                break
+            else:
+                choice = 'unasigned'
+            trial_data.addData('choice', choice)
+            
+        win1.close()
+        win2.close()    
         
-        shape2.pos = (0, this_trial['position'] + this_trial['offset'])
-        shape2.draw()
+        df = trial_data.saveAsWideText(fileName = 'vernier_data',
+                              appendFile = False,
+                              )
         
-        win1.flip()
-        win2.flip()
-        
-        SUBJ_INPUT = event.waitKeys(keyList = KEY_LIST)
-        if SUBJ_INPUT in KEY_LIST[0:3]:
-            choice = 'above'
-        elif SUBJ_INPUT in KEY_LIST[3:6]:
-            choice = 'below'
-        trial_data.addData('choice', choice)
-        
-    win1.close()
-    win2.close()    
-    
-    trial_data.saveAsText(fileName = 'vernier_data',
-                          stimOut = ['offset', 'position'],
-                          dataOut = ['choice_raw'])
-    
-#    trial_data.saveAsExcel(fileName = 'testData')
-# NEW BRANCH
+    except Exception:
+        traceback.print_exc()
+        win1.close()
+        win2.close()
