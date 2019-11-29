@@ -18,7 +18,67 @@ import numpy as np
 from psychopy import data, visual, event, monitors
 import traceback
 
-# try/except to prevent window being presented if there is an error in 
+
+def integer_input(message = "Please enter an integer", integer_range = None):
+    """
+    Take an input from user and check that it is an integer.
+    
+    Keyword arguments:
+    message -- asks user for input
+    integer_range -- optional integer range
+    
+    Returns:
+    integer from user
+    
+    """
+    
+#    integer = []
+#    while not (integer > integer_range[0] and integer < integer_range[1]):
+    
+    try:
+        integer = int(input(message))
+    except Exception:
+        print("Please enter an integer\n")
+    else:
+        return integer
+            
+
+
+
+# constants
+ORIENTATION = integer_input("Please enter the required orientation: ", [0, 360])
+THETA = np.radians(ORIENTATION)
+R = np.array([[np.cos(THETA), -np.sin(THETA)],[np.sin(THETA), np.cos(THETA)]])
+
+MIN_POS = -20   # minimum central position of line pair
+MAX_POS = 20    # maximum central position of line pair
+
+OFFSET_LOW = -10   # largest negative offset (i.e. green below red)
+OFFSET_HIGH = 10   # largest positive offset
+OFFSET_STEP_SIZE = 2  # offset increment
+OFFSETS = np.arange(OFFSET_LOW, OFFSET_HIGH + OFFSET_STEP_SIZE, OFFSET_STEP_SIZE)   # generate array of possible offset values
+
+N_REPS = 1  # trial repeats
+KEY_LIST = ['num_1', 'num_2', 'num_3', 'num_7', 'num_8', 'num_9', 'escape']    # possible keyboard entries
+
+LINE_WIDTH = 5 # width of line
+LINE_LENGTH = 300   # length of line
+LINE_VERTICES_RAW = np.array(((-LINE_LENGTH/2, 0), (LINE_LENGTH/2, 0)))   # line coordinates
+LINE_VERTICES = R.dot(LINE_VERTICES_RAW)
+LINE_DISPLACEMENT = 25  # separation of line ends
+
+LINE_COLOR = [-1, -1, -1]
+LINE_POS_RAW = (LINE_LENGTH/2 + LINE_DISPLACEMENT, 0)
+LINE_POS = R.dot(LINE_POS_RAW)
+# variables
+
+trial = {}  # initialise trial parameters dictionary
+trial_list = [] # initialise list of dictionaries
+
+
+
+
+# try/except to prevent window being presented if there is an error in set-up
 try:
     # Gain access to calibration/screen information
     mon1 = monitors.Monitor('whiteOLED_2_SADK_luma1200')  
@@ -36,40 +96,23 @@ try:
                         winType = "pyglet",
                         screen = 2,
                         color = [1, 1, 1])
-    
-    # constants
-    MIN_POS = -20   # minimum central position of line pair
-    MAX_POS = 20    # maximum central position of line pair
-    OFFSET_LOW = -10   # largest negative offset (i.e. green below red)
-    OFFSET_HIGH = 10   # largest positive offset
-    OFFSET_STEP_SIZE = 2  # offset increment
-    OFFSETS = np.arange(OFFSET_LOW, OFFSET_HIGH + OFFSET_STEP_SIZE, OFFSET_STEP_SIZE)   # generate array of possible offset values
-    N_REPS = 5  # trial repeats
-    KEY_LIST = ['num_1','num_2','num_3','num_7','num_8','num_9','escape']    # possible keyboard entries
-    LINE_WIDTH = 5 # width of line
-    LINE_LENGTH = 300   # length of line
-    LINE_VERTICES = ((-LINE_LENGTH/2, 0), (LINE_LENGTH/2, 0))   # line coordinates
-    LINE_DISPLACEMENT = 25  # separation of line ends
-    # variables
-    trial = {}  # initialise trial parameters dictionary
-    trial_list = [] # initialise list of dictionaries
-    
+      
     
     # Create lines to be presented on screens
     shape1 = visual.ShapeStim(win1,
                              units = "pix",
                              lineWidth = LINE_WIDTH,
                              vertices = LINE_VERTICES,
-                             lineColor = [-1, -1, -1],   # adust brightness (correct terminology? probs not)
-                             pos = (LINE_LENGTH/2 + LINE_DISPLACEMENT, 0), # one of the screens is viewed backwards...88
+                             lineColor = LINE_COLOR,   # adust brightness (correct terminology? probs not)
+                             pos = LINE_POS, # one of the screens is viewed backwards...88
                              )
                              
     shape2 = visual.ShapeStim(win2,
                              units = "pix",
                              lineWidth = LINE_WIDTH,
                              vertices = LINE_VERTICES,
-                             lineColor = [-1, 1, -1],
-                             pos = (LINE_LENGTH/2 + LINE_DISPLACEMENT, 0),
+                             lineColor = LINE_COLOR,
+                             pos = LINE_POS,
                              )
     
  
