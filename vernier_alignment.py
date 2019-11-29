@@ -29,12 +29,7 @@ def integer_input(message = "Please enter an integer", integer_range = None):
     
     Returns:
     integer from user
-    
     """
-    
-#    integer = []
-#    while not (integer > integer_range[0] and integer < integer_range[1]):
-    
     try:
         integer = int(input(message))
     except Exception:
@@ -44,11 +39,21 @@ def integer_input(message = "Please enter an integer", integer_range = None):
             
 
 
+def vertices_rotation(vertices=np.array([0,0]), orientaion=0):
+    """
+    rotates the vertices by the angle given by 
+    """
+    THETA = np.radians(orientaion)
+    R = np.array([
+                [np.cos(THETA), -np.sin(THETA)], 
+                [np.sin(THETA), np.cos(THETA)]
+                ])
+    return R.dot(vertices)
+
+
 
 # constants
 ORIENTATION = integer_input("Please enter the required orientation: ", [0, 360])
-THETA = np.radians(ORIENTATION)
-R = np.array([[np.cos(THETA), -np.sin(THETA)],[np.sin(THETA), np.cos(THETA)]])
 
 MIN_POS = -20   # minimum central position of line pair
 MAX_POS = 20    # maximum central position of line pair
@@ -63,13 +68,23 @@ KEY_LIST = ['num_1', 'num_2', 'num_3', 'num_7', 'num_8', 'num_9', 'escape']    #
 
 LINE_WIDTH = 5 # width of line
 LINE_LENGTH = 300   # length of line
-LINE_VERTICES_RAW = np.array(((-LINE_LENGTH/2, 0), (LINE_LENGTH/2, 0)))   # line coordinates
-LINE_VERTICES = R.dot(LINE_VERTICES_RAW)
+
+""" 
+Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] to 
+allow multiplication  by rotation matrix.
+
+For Psychopy, need to be arranged as [[x1, y1], [x2,y2], ..., [xn, yn]]
+"""
+LINE_VERTICES_RAW = np.array([
+                            [-LINE_LENGTH/2, LINE_LENGTH/2],
+                            [0, 0]
+                            ])                            
+LINE_VERTICES = vertices_rotation(LINE_VERTICES_RAW, ORIENTATION)
 LINE_DISPLACEMENT = 25  # separation of line ends
 
 LINE_COLOR = [-1, -1, -1]
 LINE_POS_RAW = (LINE_LENGTH/2 + LINE_DISPLACEMENT, 0)
-LINE_POS = R.dot(LINE_POS_RAW)
+LINE_POS = vertices_rotation(LINE_POS_RAW, ORIENTATION)
 # variables
 
 trial = {}  # initialise trial parameters dictionary
