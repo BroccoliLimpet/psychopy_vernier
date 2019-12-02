@@ -17,76 +17,60 @@ Created on Thu Nov 21 15:13:17 2019
 import numpy as np
 from psychopy import data, visual, event, monitors
 import traceback
+import vernier_alignment_functions as funs
 
 
-def integer_input(message = "Please enter an integer", integer_range = None):
-    """
-    Take an input from user and check that it is an integer.
-    
-    Keyword arguments:
-    message -- asks user for input
-    integer_range -- optional integer range
-    
-    Returns:
-    integer from user
-    """
-    try:
-        integer = int(input(message))
-    except Exception:
-        print("Please enter an integer\n")
-    else:
-        return integer
-            
+theta, rot_mat = funs.rotation_matrix()
 
 
-def vertices_rotation(vertices=np.array([0,0]), orientaion=0):
-    """
-    rotates the vertices by the angle given by 
-    """
-    THETA = np.radians(orientaion)
-    R = np.array([
-                [np.cos(THETA), -np.sin(THETA)], 
-                [np.sin(THETA), np.cos(THETA)]
-                ])
-    return R.dot(vertices)
+## VARIABLES ##
+
+""" The position of the two lines changes between each trial. 
+Parameters set here."""
+ 
+# minimum central position of line pair
+min_pos = -20
+# maximum central position of line pair  
+max_pos = 20    
+
+""" The offset between the two lines change between each trial.
+Paraameter set here. """
+
+# largest negative offset (i.e. green below red)
+offset_low = -10   
+# largest positive offset
+offset_high = 10   
+# offset increment
+offset_step_size = 2  
+# generate array of possible offset values
+offsets = np.arange(offset_low, 
+                    offset_high + offset_step_size, 
+                    offset_step_size)   
+
+""" The number of trials and possible subject keyboard inputs"""
+
+# trial repeats
+n_reps = 1  
+# possible keyboard entries
+key_list = ['num_1', 'num_2', 'num_3', 'num_7', 'num_8', 'num_9', 'escape']   
 
 
+""" Line parameters """
 
-# constants
-ORIENTATION = integer_input("Please enter the required orientation: ", [0, 360])
+line_width = 5
+line_length = 300   
+# separation of line ends
+line_displacement = 25  
+line_color = [-1, -1, -1]
 
-MIN_POS = -20   # minimum central position of line pair
-MAX_POS = 20    # maximum central position of line pair
+""" Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] to 
+allow multiplication  by rotation matrix. For Psychopy, this needs to be 
+arranged as [[x1, y1], [x2,y2], ..., [xn, yn]]. """
 
-OFFSET_LOW = -10   # largest negative offset (i.e. green below red)
-OFFSET_HIGH = 10   # largest positive offset
-OFFSET_STEP_SIZE = 2  # offset increment
-OFFSETS = np.arange(OFFSET_LOW, OFFSET_HIGH + OFFSET_STEP_SIZE, OFFSET_STEP_SIZE)   # generate array of possible offset values
+line_vertices = np.transpose(rot_mat.dot(np.array([[-line_length/2, line_length/2], [0, 0]])))
+line_pos = np.transpose(rot_mat.dot((line_length/2 + line_displacement, 0)))
 
-N_REPS = 1  # trial repeats
-KEY_LIST = ['num_1', 'num_2', 'num_3', 'num_7', 'num_8', 'num_9', 'escape']    # possible keyboard entries
-
-LINE_WIDTH = 5 # width of line
-LINE_LENGTH = 300   # length of line
-
-""" 
-Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] to 
-allow multiplication  by rotation matrix.
-
-For Psychopy, need to be arranged as [[x1, y1], [x2,y2], ..., [xn, yn]]
-"""
-LINE_VERTICES_RAW = np.array([
-                            [-LINE_LENGTH/2, LINE_LENGTH/2],
-                            [0, 0]
-                            ])                            
-LINE_VERTICES = vertices_rotation(LINE_VERTICES_RAW, ORIENTATION)
-LINE_DISPLACEMENT = 25  # separation of line ends
-
-LINE_COLOR = [-1, -1, -1]
-LINE_POS_RAW = (LINE_LENGTH/2 + LINE_DISPLACEMENT, 0)
-LINE_POS = vertices_rotation(LINE_POS_RAW, ORIENTATION)
-# variables
-
+""" Initialise trial data dictionary and list of dictionaries """
 trial = {}  # initialise trial parameters dictionary
 trial_list = [] # initialise list of dictionaries
 
@@ -116,37 +100,37 @@ try:
     # Create lines to be presented on screens
     shape1 = visual.ShapeStim(win1,
                              units = "pix",
-                             lineWidth = LINE_WIDTH,
-                             vertices = LINE_VERTICES,
-                             lineColor = LINE_COLOR,   # adust brightness (correct terminology? probs not)
-                             pos = LINE_POS, # one of the screens is viewed backwards...88
+                             lineWidth = line_width,
+                             vertices = line_vertices,
+                             lineColor = line_color,   # adust brightness (correct terminology? probs not)
+                             pos = line_pos, # one of the screens is viewed backwards...88
                              )
                              
     shape2 = visual.ShapeStim(win2,
                              units = "pix",
-                             lineWidth = LINE_WIDTH,
-                             vertices = LINE_VERTICES,
-                             lineColor = LINE_COLOR,
-                             pos = LINE_POS,
+                             lineWidth = line_width,
+                             vertices = line_vertices,
+                             lineColor = line_color,
+                             pos = line_pos,
                              )
-    
- 
-    
+                             
     # build trial parameter dictionaries for psychopy's 'TrialHandler'
-    for offset in OFFSETS:
+    for offset in offsets:
         trial = {
             'offset' : offset,
-            'position' : np.random.randint(MIN_POS, MAX_POS)
+            'position' : np.random.randint(min_pos, max_pos)
         }
         trial_list.append(trial)
         
-    trial_data = data.TrialHandler(trial_list,
-                                    N_REPS,
-                                    method = 'random',
-                                    )
+    trial_data = data.TrialHandler(trial_list, n_reps, method = 'random')       
+    
+
+
 except Exception:
     traceback.print_exc()
     
+
+
 else:
     try:
         for this_trial in trial_data:
@@ -159,12 +143,12 @@ else:
             win1.flip()
             win2.flip()
             
-            SUBJ_INPUT = event.waitKeys(keyList = KEY_LIST)
-            if SUBJ_INPUT[0] in KEY_LIST[0:3]:
+            subj_input = event.waitKeys(keyList = key_list)
+            if subj_input[0] in key_list[0:3]:
                 choice = 'below'
-            elif SUBJ_INPUT[0] in KEY_LIST[3:6]:
+            elif subj_input[0] in key_list[3:6]:
                 choice = 'above'
-            elif SUBJ_INPUT[0] == 'escape':
+            elif subj_input[0] == 'escape':
                 break
             else:
                 choice = 'unasigned'
