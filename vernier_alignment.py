@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Script to present horizontal (or vertical) lines to a subject.
+Script to present horizontal (or vertical) lines to a subject that are slightly
+displaced from one another.
 
-Aim is that each line is presented on a different OLED monitor. Each monitor is
-optically filtered - one appears green, the other red
+The user is asked to decided whether a certain line is above or below (or to
+the left or right) of the other.
 
-Subject uses keyboard to indicate whether green line is above or below red 
-line.
+Each line is presented on a different OLED monitor and each monitor is
+optically filtered - one appears green, the other red. The user can be asked
+to decide if the green line is above the red, for example.
 
 Created on Thu Nov 21 15:13:17 2019
 
@@ -22,13 +24,14 @@ import vernier_alignment_functions as funs
 
 ## VARIABLES ##
 
-""" user definer orientation"""
+""" user definer orientation - this determines the orientation of the two 
+lines"""
 
 theta, rot_mat = funs.rotation_matrix()
 
 
-""" The position of the two lines changes between each trial. 
-Parameters set here."""
+""" The position of the two lines changes between each trial. Parameters are 
+set here."""
  
 # minimum central position of line pair
 min_pos = -20
@@ -36,8 +39,8 @@ min_pos = -20
 max_pos = 20    
 
 
-""" The offset between the two lines change between each trial.
-Paraameter set here. """
+""" The offset between the two lines (that is, the amount by which the two 
+lines do not line up) change between each trial. Parameters set here. """
 
 # largest negative offset (i.e. green below red)
 offset_low = -10   
@@ -56,13 +59,17 @@ offsets = np.arange(offset_low,
 # trial repeats
 n_reps = 1  
 # possible keyboard entries
-key_list = ['num_1', 'num_2', 'num_3', 'num_7', 'num_8', 'num_9', 'escape']   
+key_list = ['num_1', 'num_2', 'num_3', \
+            'num_4', 'num_5', 'num_6', \
+            'num_7', 'num_8', 'num_9', \
+            'escape']   
 
 
-""" Line parameters """
+""" Line appearence parameters """
 
 line_width = 5
-line_length = 300   
+line_length = 300
+   
 # separation of line ends
 line_displacement = 25  
 line_color = [-1, -1, -1]
@@ -73,8 +80,8 @@ allow multiplication  by rotation matrix. For Psychopy, this needs to be
 arranged as [[x1, y1], [x2,y2], ..., [xn, yn]]. """
 
 line_vertices = np.transpose(rot_mat.dot(np.array([[-line_length/2, line_length/2], [0, 0]])))
-line_pos = np.transpose(rot_mat.dot((line_length/2 + line_displacement, 0)))
-
+line1_pos = np.transpose(rot_mat.dot((line_length/2 + line_displacement, 0)))
+line2_pos = np.array([-1, -1]) * line1_pos
 
 """ Initialise trial data dictionary and list of dictionaries """
 trial = {}  # initialise trial parameters dictionary
@@ -90,34 +97,42 @@ for offset in offsets:
 trial_data = data.TrialHandler(trial_list, n_reps, method = 'random')   
 
 
-run_type = 'test'
+""" This can be used to enter the trial mode which displays lines on this
+monitor, rather than the OLEDS. The size and displacements of the lines are
+scaled down by a factor of two in the test mode. """
+
+run_type = 'trial'
 
 
-# try/except to prevent window being presented if there is an error in set-up
+""" Initialies monitors, windows and shapes. A try/except/else structures 
+should prevent a window being presented if there is an error in set-up (aiming
+to avoid kernel death """
+
 try:
-    
+    pass
     if run_type == 'test':
-        win, shape1, shape2 = funs.initialise_test(line_width/2, 
-                                                   line_vertices/2, 
-                                                   line_pos/2)
+        win, shape1, shape2 = funs.initialise_test(line_width, 
+                                                   line_vertices, 
+                                                   line1_pos)
     else:
         mon1, mon2, win1, win2, shape1, shape2 = funs.initialise_oleds(line_width, 
                                                               line_vertices, 
                                                               line_color, 
-                                                              line_pos)
-
+                                                              line1_pos,
+                                                              line2_pos)
 except Exception:
     traceback.print_exc()
+
+
     
-
-
 else:
+    """ Trial starts here. """
     try:
         for this_trial in trial_data:
             shape1.pos = shape1.pos + rot_mat.dot(np.array((0, this_trial['position'])))
             shape1.draw()
             
-            shape2.pos = shape2.pos + rot_mat.dot(np.array((0, this_trial['position'] + this_trial['offset'])))
+            shape2.pos = shape2.pos + np.array([-1, 0]) * rot_mat.dot(np.array([0, this_trial['position'] + this_trial['offset']]))
             shape2.draw()
             
             if run_type == 'test':
@@ -126,27 +141,25 @@ else:
                 win1.flip()
                 win2.flip()
             
-            subj_input = event.waitKeys(keyList = key_list)
-            if subj_input[0] in key_list[0:3]:
-                choice = 'below'
-            elif subj_input[0] in key_list[3:6]:
-                choice = 'above'
-            elif subj_input[0] == 'escape':
+            choice = event.waitKeys(keyList = key_list)
+            if choice[0] == 'escape':
                 break
             else:
-                choice = 'unasigned'
-            trial_data.addData('choice', choice)
+                trial_data.addData('choice', choice[0])
         if run_type == 'test':
             win.close()
         else:
             win1.close()
             win2.close()    
         
+        
+        """ Save output as a text doc and create a panda dataframe"""
         df = trial_data.saveAsWideText(fileName = 'vernier_data',
                               appendFile = False,
                               )
-        
+                              
     except Exception:
+        """ Close windows """
         traceback.print_exc()
         if run_type == 'test':
             win.close()

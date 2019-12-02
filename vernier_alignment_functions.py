@@ -16,7 +16,7 @@ def rotation_matrix():
     return theta, R
     
 
-def initialise_test(line_width, line_vertices, line_pos):
+def initialise_test(line_width, line_vertices, line1_pos, line2_pos):
     
     win = visual.Window()
     
@@ -26,21 +26,21 @@ def initialise_test(line_width, line_vertices, line_pos):
                              lineWidth = line_width,
                              vertices = line_vertices,
                              lineColor = [1, -1, -1],   # adust brightness (correct terminology? probs not)
-                             pos = line_pos, # one of the screens is viewed backwards...88
+                             pos = line1_pos, # one of the screens is viewed backwards...88
                              )
                              
     shape2 = visual.ShapeStim(win,
                              units = "pix",
                              lineWidth = line_width,
-                             vertices = line_vertices,
+                             vertices = np.array([-1, 0]) * line_vertices,
                              lineColor = [-1, 1, -1],
-                             pos = -line_pos,
+                             pos = line2_pos,
                              )
     
     return (win, shape1, shape2)
     
 
-def initialise_oleds(line_width, line_vertices, line_color, line_pos):
+def initialise_oleds(line_width, line_vertices, line_color, line1_pos, line2_pos):
     """
     """
     # Gain access to calibration/screen information
@@ -67,7 +67,7 @@ def initialise_oleds(line_width, line_vertices, line_color, line_pos):
                              lineWidth = line_width,
                              vertices = line_vertices,
                              lineColor = line_color,   # adust brightness (correct terminology? probs not)
-                             pos = line_pos, # one of the screens is viewed backwards...88
+                             pos = line1_pos, # one of the screens is viewed backwards...
                              )
                              
     shape2 = visual.ShapeStim(win2,
@@ -75,7 +75,7 @@ def initialise_oleds(line_width, line_vertices, line_color, line_pos):
                              lineWidth = line_width,
                              vertices = line_vertices,
                              lineColor = line_color,
-                             pos = line_pos,
+                             pos = np.array([-1, 1]) * line2_pos,
                              )
     
     return (mon1, mon2, win1, win2, shape1, shape2)
