@@ -75,13 +75,13 @@ line_displacement = 25
 line_color = [-1, -1, -1]
 
 
-""" Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] to 
-allow multiplication  by rotation matrix. For Psychopy, this needs to be 
-arranged as [[x1, y1], [x2,y2], ..., [xn, yn]]. """
+""" Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] 
+to allow multiplication by rotation matrix. For Psychopy, this needs to be 
+transposed to become [[x1, y1], [x2,y2], ..., [xn, yn]]. """
 
-line_vertices = np.transpose(rot_mat.dot(np.array([[-line_length/2, line_length/2], [0, 0]])))
-line1_pos = np.transpose(rot_mat.dot((line_length/2 + line_displacement, 0)))
-line2_pos = np.array([-1, -1]) * line1_pos
+line_vertices = np.array([[-line_length/2, line_length/2], [0, 0]])
+line_pos = np.array([line_length/2 + line_displacement, 0])
+
 
 """ Initialise trial data dictionary and list of dictionaries """
 trial = {}  # initialise trial parameters dictionary
@@ -101,7 +101,7 @@ trial_data = data.TrialHandler(trial_list, n_reps, method = 'random')
 monitor, rather than the OLEDS. The size and displacements of the lines are
 scaled down by a factor of two in the test mode. """
 
-run_type = 'trial'
+run_type = 'test'
 
 
 """ Initialies monitors, windows and shapes. A try/except/else structures 
@@ -113,13 +113,15 @@ try:
     if run_type == 'test':
         win, shape1, shape2 = funs.initialise_test(line_width, 
                                                    line_vertices, 
-                                                   line1_pos)
+                                                   line_pos,
+                                                   rot_mat,
+                                                   )
     else:
         mon1, mon2, win1, win2, shape1, shape2 = funs.initialise_oleds(line_width, 
                                                               line_vertices, 
                                                               line_color, 
-                                                              line1_pos,
-                                                              line2_pos)
+                                                              line_pos,
+                                                              )
 except Exception:
     traceback.print_exc()
 
@@ -132,7 +134,7 @@ else:
             shape1.pos = shape1.pos + rot_mat.dot(np.array((0, this_trial['position'])))
             shape1.draw()
             
-            shape2.pos = shape2.pos + np.array([-1, 0]) * rot_mat.dot(np.array([0, this_trial['position'] + this_trial['offset']]))
+            shape2.pos = shape2.pos + rot_mat.dot(np.array([-1,1]) * np.array([0, this_trial['position'] + this_trial['offset']]))
             shape2.draw()
             
             if run_type == 'test':

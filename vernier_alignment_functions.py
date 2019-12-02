@@ -16,7 +16,7 @@ def rotation_matrix():
     return theta, R
     
 
-def initialise_test(line_width, line_vertices, line1_pos, line2_pos):
+def initialise_test(line_width, line_vertices, line_pos, rot_mat):
     
     win = visual.Window()
     
@@ -24,17 +24,17 @@ def initialise_test(line_width, line_vertices, line1_pos, line2_pos):
     shape1 = visual.ShapeStim(win,
                              units = "pix",
                              lineWidth = line_width,
-                             vertices = line_vertices,
+                             vertices = rot_mat.dot(line_vertices).transpose(), # rotate by given angle, then transpose to suit psychopy input
                              lineColor = [1, -1, -1],   # adust brightness (correct terminology? probs not)
-                             pos = line1_pos, # one of the screens is viewed backwards...88
+                             pos = rot_mat.dot(line_pos),
                              )
                              
     shape2 = visual.ShapeStim(win,
                              units = "pix",
                              lineWidth = line_width,
-                             vertices = np.array([-1, 0]) * line_vertices,
+                             vertices = rot_mat.dot(line_vertices).transpose(),
                              lineColor = [-1, 1, -1],
-                             pos = line2_pos,
+                             pos = rot_mat.dot(np.array([-1, 1]) * line_pos),
                              )
     
     return (win, shape1, shape2)
