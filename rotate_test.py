@@ -14,21 +14,28 @@ try:
     win = visual.Window()
     
     shape_vert = np.array([[-100, 100], [0, 0]])
-    shape_pos = np.array([-(100 + 10), 0])
+    shape_pos = np.array([[100], [0]])
     
-    theta = np.radians(45)
-    R = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+    theta = np.radians(90)
+    rotate_mat = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
     
+    reflect_mat = np.array([[-1, 0], [0, 1]])
     
+    """ red line """
     shape1 = visual.ShapeStim(win, 
                              units = "pix",
-                             vertices = R.dot(shape_vert).transpose(),
-                             pos = R.dot(shape_pos))
-                             
+                             vertices = rotate_mat.dot(shape_vert).transpose(),
+                             pos = rotate_mat.dot(shape_pos).transpose(),
+                             lineColor = [1, -1, -1],
+                             )
+    
+    """ green line """                        
     shape2 = visual.ShapeStim(win,
                               units = "pix",
-                              vertices = R.dot(shape_vert).transpose(),
-                              pos = R.dot(np.array([-1, 1]) * (shape_pos + np.array([0, 20]))))
+                              vertices = reflect_mat.dot(rotate_mat.dot(shape_vert)).transpose(),
+                              pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(shape_pos))).transpose(),
+                              lineColor = [-1, 1, -1],
+                              )
                               
     shape1.draw()
     shape2.draw()

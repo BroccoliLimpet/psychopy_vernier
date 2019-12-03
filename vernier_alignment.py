@@ -27,7 +27,9 @@ import vernier_alignment_functions as funs
 """ user definer orientation - this determines the orientation of the two 
 lines"""
 
-theta, rot_mat = funs.rotation_matrix()
+theta = np.radians(input("Enter orientation in degrees: "))
+rot_mat = funs.rotation_matrix(theta)
+
 
 
 """ The position of the two lines changes between each trial. Parameters are 
@@ -80,7 +82,7 @@ to allow multiplication by rotation matrix. For Psychopy, this needs to be
 transposed to become [[x1, y1], [x2,y2], ..., [xn, yn]]. """
 
 line_vertices = np.array([[-line_length/2, line_length/2], [0, 0]])
-line_pos = np.array([line_length/2 + line_displacement, 0])
+line_pos = np.array([[line_length/2 + line_displacement], [0]])
 
 
 """ Initialise trial data dictionary and list of dictionaries """
@@ -121,6 +123,7 @@ try:
                                                               line_vertices, 
                                                               line_color, 
                                                               line_pos,
+                                                              rot_mat
                                                               )
 except Exception:
     traceback.print_exc()
