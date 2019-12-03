@@ -7,8 +7,9 @@ Created on Mon Dec  2 11:03:41 2019
 
 import numpy as np
 from psychopy import monitors, visual
+import constant
 
-reflect_mat = np.array([[-1, 0], [0, 1]])
+reflect_mat = constant.reflect_mat
 
 def rotation_matrix(theta):
     """
@@ -40,27 +41,18 @@ def initialise_test(line_width, line_vertices, line_pos, rotate_mat):
                               lineColor = [-1, 1, -1],
                               )    
     
-#    shape1 = visual.ShapeStim(win,
-#                             units = "pix",
-#                             lineWidth = line_width,
-#                             vertices = rotate_mat.dot(line_vertices).transpose(), # rotate by given angle, then transpose to suit psychopy input
-#                             lineColor = [1, -1, -1],   # adust brightness (correct terminology? probs not)
-##                             pos = rot_mat.dot(line_pos),
-#                             )
-#                             
-#    shape2 = visual.ShapeStim(win,
-#                             units = "pix",
-#                             lineWidth = line_width,
-#                             vertices = rotate_mat.dot(line_vertices).transpose(),
-#                             lineColor = [-1, 1, -1],
-##                             pos = rot_mat.dot(np.array([-1, 1]) * line_pos),
-#                             )
-    
+   
     return (win, shape1, shape2)
     
 
-def initialise_oleds(line_width, line_vertices, line_color, line_pos, rot_mat):
+def initialise_oleds(line_width, line_vertices, line_color, line_pos, rotate_mat):
     """
+    One set of coordinates is used for both lines, but the position of line 2
+    is the relfection in the y-axis.
+    
+    Screen 2 is seen as a reflection of itself, due to the reflection at the 
+    beam splitter. To counteract this, the line is reflected in the y-axis for 
+    a second time.
     """
         
     
@@ -86,17 +78,17 @@ def initialise_oleds(line_width, line_vertices, line_color, line_pos, rot_mat):
     shape1 = visual.ShapeStim(win1,
                              units = "pix",
                              lineWidth = line_width,
-                             vertices = rot_mat.dot(line_vertices).transpose(),
+                             vertices = rotate_mat.dot(line_vertices).transpose(),
                              lineColor = line_color,   # adust brightness (correct terminology? probs not)
-                             pos = rot_mat.dot(line_pos), # one of the screens is viewed backwards...
+                             pos = rotate_mat.dot(line_pos).transpose(), 
                              )
                              
     shape2 = visual.ShapeStim(win2,
                              units = "pix",
                              lineWidth = line_width,
-                             vertices = reflect_mat.dot(rot_mat.dot(line_vertices)).transpose(),
+                             vertices = reflect_mat.dot(rotate_mat.dot(line_vertices)).transpose(),
                              lineColor = line_color,
-                             pos = rot_mat.dot(np.array([-1, 1]) * line_pos),
+                             pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(line_pos))).transpose(),
                              )
     
     return (mon1, mon2, win1, win2, shape1, shape2)

@@ -20,6 +20,7 @@ import numpy as np
 from psychopy import data, event
 import traceback
 import vernier_alignment_functions as funs
+import constant
 
 
 ## VARIABLES ##
@@ -28,8 +29,8 @@ import vernier_alignment_functions as funs
 lines"""
 
 theta = np.radians(input("Enter orientation in degrees: "))
-rot_mat = funs.rotation_matrix(theta)
-
+rotate_mat = funs.rotation_matrix(theta)
+reflect_mat = constant.reflect_mat
 
 
 """ The position of the two lines changes between each trial. Parameters are 
@@ -103,7 +104,7 @@ trial_data = data.TrialHandler(trial_list, n_reps, method = 'random')
 monitor, rather than the OLEDS. The size and displacements of the lines are
 scaled down by a factor of two in the test mode. """
 
-run_type = 'test'
+run_type = 'trial'
 
 
 """ Initialies monitors, windows and shapes. A try/except/else structures 
@@ -113,17 +114,17 @@ to avoid kernel death """
 try:
     pass
     if run_type == 'test':
-        win, shape1, shape2 = funs.initialise_test(line_width, 
+        win, line1, line2 = funs.initialise_test(line_width, 
                                                    line_vertices, 
                                                    line_pos,
-                                                   rot_mat,
+                                                   rotate_mat,
                                                    )
     else:
-        mon1, mon2, win1, win2, shape1, shape2 = funs.initialise_oleds(line_width, 
+        mon1, mon2, win1, win2, line1, line2 = funs.initialise_oleds(line_width, 
                                                               line_vertices, 
                                                               line_color, 
                                                               line_pos,
-                                                              rot_mat
+                                                              rotate_mat
                                                               )
 except Exception:
     traceback.print_exc()
@@ -134,11 +135,13 @@ else:
     """ Trial starts here. """
     try:
         for this_trial in trial_data:
-            shape1.pos = shape1.pos + rot_mat.dot(np.array((0, this_trial['position'])))
-            shape1.draw()
+            line1_shift = np.array([[0], [this_trial['position']]])
+            line1.pos = line1.pos + rotate_mat.dot(line1_shift).transpose()
+            line1.draw()
             
-            shape2.pos = shape2.pos + rot_mat.dot(np.array([-1,1]) * np.array([0, this_trial['position'] + this_trial['offset']]))
-            shape2.draw()
+            line2_shift = np.array([[0], [this_trial['position'] + this_trial['offset']]])
+            line2.pos = line2.pos + reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(line2_shift))).transpose()
+            line2.draw()
             
             if run_type == 'test':
                 win.flip()
@@ -157,11 +160,11 @@ else:
             win1.close()
             win2.close()    
         
-        
-        """ Save output as a text doc and create a panda dataframe"""
-        df = trial_data.saveAsWideText(fileName = 'vernier_data',
-                              appendFile = False,
-                              )
+        if run_type != 'test':
+            """ Save output as a text doc and create a panda dataframe"""
+            df = trial_data.saveAsWideText(fileName = 'vernier_data',
+                                  appendFile = False,
+                                  )
                               
     except Exception:
         """ Close windows """
