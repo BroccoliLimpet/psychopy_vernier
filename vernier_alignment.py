@@ -25,7 +25,7 @@ import constant
 
 ## VARIABLES ##
 
-""" user definer orientation - this determines the orientation of the two 
+""" user defines orientation - this determines the orientation of the two 
 lines"""
 
 theta = np.radians(input("Enter orientation in degrees: "))
@@ -33,8 +33,8 @@ rotate_mat = funs.rotation_matrix(theta)
 reflect_mat = constant.reflect_mat
 
 
-""" The position of the two lines changes between each trial. Parameters are 
-set here."""
+""" The position of the two lines changesrandomly  between each trial. 
+Parameters are set here."""
  
 # minimum central position of line pair
 min_pos = -20
@@ -73,7 +73,7 @@ key_list = ['num_1', 'num_2', 'num_3', \
 line_width = 5
 line_length = 300
    
-# separation of line ends
+""" separation of line ends """
 line_displacement = 25  
 line_color = [-1, -1, -1]
 
