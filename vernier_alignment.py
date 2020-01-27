@@ -21,14 +21,20 @@ from psychopy import data, event
 import traceback
 import vernier_alignment_functions as funs
 import constant
+from datetime import datetime
+import pyo
+import time
+## CONSTANTS ##
 
+pix2deg = 0.0021
+pix2arcmin = pix2deg / 60 
 
 ## VARIABLES ##
 
 """ user defines orientation - this determines the orientation of the two 
 lines"""
 
-theta = np.radians(input("Enter orientation in degrees: "))
+theta = np.radians(int(input("Enter orientation in degrees: ")))
 rotate_mat = funs.rotation_matrix(theta)
 reflect_mat = constant.reflect_mat
 
@@ -58,10 +64,8 @@ offsets = np.arange(offset_low,
 
 
 """ The number of trials and possible subject keyboard inputs"""
-
 # trial repeats
-n_reps = 1  
-# possible keyboard entries
+n_reps = 1
 key_list = ['num_1', 'num_2', 'num_3', \
             'num_4', 'num_5', 'num_6', \
             'num_7', 'num_8', 'num_9', \
@@ -70,12 +74,15 @@ key_list = ['num_1', 'num_2', 'num_3', \
 
 """ Line appearence parameters """
 
-line_width = 5
-line_length = 300
+line_width = 2
+line_length = 100
    
 """ separation of line ends """
-line_displacement = 25  
-line_color = [-1, -1, -1]
+line_displacement = 12  
+
+""" colors """
+line_color = [1, 1, 1]
+background_color = [-1, -1, -1]
 
 
 """ Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] 
@@ -97,14 +104,32 @@ for offset in offsets:
     }
     trial_list.append(trial)
     
-trial_data = data.TrialHandler(trial_list, n_reps, method = 'random')   
+trial_data = data.TrialHandler(trial_list, n_reps, method = 'random')
 
+""" Add additional trial information """
+participant_name = input('Participant name: ')
+trial_date = datetime.now().strftime("%d-%m-%Y, %H-%M-%S")
+trial_data.extraInfo = {
+        'participant' : participant_name,
+        'date' : trial_date,
+        'orientation' : theta,
+        }
+
+file_name = f"data\{participant_name}, ori = {int(np.rad2deg(theta))}, date = {trial_date}"
 
 """ This can be used to enter the trial mode which displays lines on this
 monitor, rather than the OLEDS. The size and displacements of the lines are
 scaled down by a factor of two in the test mode. """
 
-run_type = 'trial'
+run_type = 'test'
+
+
+"""
+Iitialise sounds
+"""
+soundserver = pyo.Server(duplex = 0).boot()
+soundserver.start()
+tone = pyo.Sine(mul = 0.5, freq = 500)
 
 
 """ Initialies monitors, windows and shapes. A try/except/else structures 
@@ -112,7 +137,7 @@ should prevent a window being presented if there is an error in set-up (aiming
 to avoid kernel death """
 
 try:
-    pass
+#    pass
     if run_type == 'test':
         win, line1, line2 = funs.initialise_test(line_width, 
                                                    line_vertices, 
@@ -124,7 +149,8 @@ try:
                                                               line_vertices, 
                                                               line_color, 
                                                               line_pos,
-                                                              rotate_mat
+                                                              rotate_mat,
+                                                              background_color,
                                                               )
 except Exception:
     traceback.print_exc()
@@ -133,15 +159,31 @@ except Exception:
     
 else:
     """ Trial starts here. """
+
     try:
+        line1_init = line1.pos
+        line2_init = line2.pos
         for this_trial in trial_data:
-            line1_shift = np.array([[0], [this_trial['position']]])
-            line1.pos = line1.pos + rotate_mat.dot(line1_shift).transpose()
-            line1.draw()
             
+#            print("line1 = " + str(line1.pos) + "\nline2 = " + str(line2.pos) + "\n")
+#            print("position = " + str(this_trial['position']) + ", offset = " + str(this_trial['offset']))
+            
+            line1_shift = np.array([[0], [this_trial['position']]])
             line2_shift = np.array([[0], [this_trial['position'] + this_trial['offset']]])
-            line2.pos = line2.pos + reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(line2_shift))).transpose()
-            line2.draw()
+
+            if run_type == 'test':
+                line1.pos = line1.pos + rotate_mat.dot(line1_shift).transpose()
+                line1.draw()
+                
+                line2.pos = line2.pos + rotate_mat.dot(line2_shift).transpose()
+                line2.draw()                
+                
+            else:
+                line1.pos = line1_init + rotate_mat.dot(line1_shift).transpose()
+                line1.draw()
+                
+                line2.pos = line2_init + reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(line2_shift))).transpose()
+                line2.draw()
             
             if run_type == 'test':
                 win.flip()
@@ -150,10 +192,18 @@ else:
                 win2.flip()
             
             choice = event.waitKeys(keyList = key_list)
+            tone.out()
+            time.sleep(0.2)
+            tone.stop()
+            
             if choice[0] == 'escape':
                 break
             else:
                 trial_data.addData('choice', choice[0])
+                
+            
+            
+            
         if run_type == 'test':
             win.close()
         else:
@@ -162,9 +212,12 @@ else:
         
         if run_type != 'test':
             """ Save output as a text doc and create a panda dataframe"""
-            df = trial_data.saveAsWideText(fileName = 'vernier_data',
+            df = trial_data.saveAsWideText(fileName = file_name,
                                   appendFile = False,
                                   )
+            fig, ax = funs.vernier_plot(df, ticks = offsets)
+            popt, copt = funs.vernier_fit(sorted(df['offset'].unique()), list(df.groupby(['offset']).mean().choice_bin), ax)
+
                               
     except Exception:
         """ Close windows """
@@ -174,3 +227,5 @@ else:
         else:
             win1.close()
             win2.close()
+            soundserver.stop()
+            
