@@ -52,9 +52,9 @@ max_pos = 20
 lines do not line up) change between each trial. Parameters set here. """
 
 # largest negative offset (i.e. green below red)
-offset_low = -10
+offset_low = 5
 # largest positive offset
-offset_high = 10   
+offset_high = 25   
 # offset increment
 offset_step_size = 2  
 # generate array of possible offset values
@@ -82,7 +82,10 @@ line_displacement = 12
 
 """ colors """
 line_color = [1, 1, 1]
-background_color = [-1, -1, -1]
+background_color = 0.8*np.array([-1, -1, -1])
+
+""" position lines on one side of screen """
+screen_position = 200
 
 
 """ Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] 
@@ -90,7 +93,7 @@ to allow multiplication by rotation matrix. For Psychopy, this needs to be
 transposed to become [[x1, y1], [x2,y2], ..., [xn, yn]]. """
 
 line_vertices = np.array([[-line_length/2, line_length/2], [0, 0]])
-line_pos = np.array([ [line_length/2 + line_displacement], [0] ])
+line_pos = np.array([[line_length/2 + line_displacement], [0]])
 
 
 """ Initialise trial data dictionary and list of dictionaries """
@@ -113,6 +116,7 @@ trial_data.extraInfo = {
         'participant' : participant_name,
         'date' : trial_date,
         'orientation' : theta,
+        'screen_position' : screen_position,
         }
 
 file_name = f"data\{participant_name}, ori = {int(np.rad2deg(theta))}, date = {trial_date}"
@@ -152,6 +156,10 @@ try:
                                                               rotate_mat,
                                                               background_color,
                                                               )
+    
+    line1.pos += np.array([screen_position, 0])
+    line2.pos += reflect_mat.dot(np.array([screen_position, 0]))
+    
 except Exception:
     traceback.print_exc()
 
