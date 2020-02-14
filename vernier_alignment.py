@@ -39,7 +39,7 @@ rotate_mat = funs.rotation_matrix(theta)
 reflect_mat = constant.reflect_mat
 
 
-""" The position of the two lines changesrandomly  between each trial. 
+""" The position of the two lines changes randomly  between each trial. 
 Parameters are set here."""
  
 # minimum central position of line pair
@@ -52,7 +52,7 @@ max_pos = 20
 lines do not line up) change between each trial. Parameters set here. """
 
 # largest negative offset (i.e. green below red)
-offset_low = -10   
+offset_low = -10
 # largest positive offset
 offset_high = 10   
 # offset increment
@@ -65,7 +65,7 @@ offsets = np.arange(offset_low,
 
 """ The number of trials and possible subject keyboard inputs"""
 # trial repeats
-n_reps = 1
+n_reps = 5
 key_list = ['num_1', 'num_2', 'num_3', \
             'num_4', 'num_5', 'num_6', \
             'num_7', 'num_8', 'num_9', \
@@ -90,7 +90,7 @@ to allow multiplication by rotation matrix. For Psychopy, this needs to be
 transposed to become [[x1, y1], [x2,y2], ..., [xn, yn]]. """
 
 line_vertices = np.array([[-line_length/2, line_length/2], [0, 0]])
-line_pos = np.array([[line_length/2 + line_displacement], [0]])
+line_pos = np.array([ [line_length/2 + line_displacement], [0] ])
 
 
 """ Initialise trial data dictionary and list of dictionaries """
@@ -121,7 +121,7 @@ file_name = f"data\{participant_name}, ori = {int(np.rad2deg(theta))}, date = {t
 monitor, rather than the OLEDS. The size and displacements of the lines are
 scaled down by a factor of two in the test mode. """
 
-run_type = 'test'
+run_type = 'trial'
 
 
 """
@@ -216,14 +216,13 @@ else:
                                   appendFile = False,
                                   )
             fig, ax = funs.vernier_plot(df, ticks = offsets)
-            popt, copt = funs.vernier_fit(sorted(df['offset'].unique()), list(df.groupby(['offset']).mean().choice_bin), ax)
+            popt, copt = funs.vernier_fit(list(df.offset), list(df.choice_bin), ax)
 
                               
     except Exception:
         """ Close windows """
         traceback.print_exc()
-        if run_type == 'test':
-            win.close()
+        if run_type == 'test':            win.close()
         else:
             win1.close()
             win2.close()
