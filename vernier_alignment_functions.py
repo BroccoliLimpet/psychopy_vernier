@@ -5,7 +5,6 @@ Created on Mon Dec  2 11:03:41 2019
 @author: Experimenter
 """
 
-import constant
 import numpy as np
 import pandas as pd
 from psychopy import monitors, visual
@@ -15,44 +14,44 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 
-reflect_mat = constant.reflect_mat
-
+def reflection_matrix():
+    """ creates a matrix that reflects in the x = 0 axis"""
+    reflect_mat = np.array([[-1, 0], [0, 1]])
+    return reflect_mat
 
 
 def rotation_matrix(theta):
-    """
-    """
-#    theta = np.radians(input("Enter orientation in degrees: "))
-    R = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
-    return R
-    
+    """ creates a rotation matrix to rotate throught angle theta """
+    rotation_mat = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+    return rotation_mat 
 
 
-
-def initialise_test(line_width, line_vertices, line_pos, rotate_mat):
+def initialise_test(shape_parameters, rotate_mat, reflect_mat):
   
-    win = visual.Window()
+    win = visual.Window(color = shape_parameters['background_color'])
     
-    # Create lines to be presented on screens
-    
+    # Create lines to be presented on screens    
+    shape_vertices = np.array([ [-shape_parameters['line_length']/2, shape_parameters['line_length']/2], [0, 0] ])
+    shape_position = np.array([ [0], [0] ]) + shape_parameters['screen_position'] # shape_parameters['line_length']/2 + shape_parameters['line_displacement']
+        
+        
     """ red line """
-    shape1 = visual.ShapeStim(win, 
+    shape_red = visual.ShapeStim(win, 
                              units = "pix",
-                             vertices = rotate_mat.dot(line_vertices).transpose(),
-                             pos = rotate_mat.dot(line_pos).transpose(),
-                             lineColor = [1, -1, -1],
+                             vertices = rotate_mat.dot(shape_vertices).transpose(),
+                             pos = rotate_mat.dot(shape_position).transpose(),
+                             lineColor = [1, -1, -1], #shape_parameters['line_color'],
                              )
         
     """ green line """                        
-    shape2 = visual.ShapeStim(win,
+    shape_green = visual.ShapeStim(win,
                               units = "pix",
-                              vertices = reflect_mat.dot(rotate_mat.dot(line_vertices)).transpose(),
-                              pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(line_pos))).transpose(),
-                              lineColor = [-1, 1, -1],
+                              vertices = reflect_mat.dot(rotate_mat.dot(shape_vertices)).transpose(),
+                              pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(shape_position))).transpose(),
+                              lineColor = [-1, 1, -1], #shape_parameters['line_color'],
                               )    
     
-   
-    return (win, shape1, shape2)
+    return (win, shape_red, shape_green, shape_vertices, shape_position)
     
 
 
@@ -149,7 +148,7 @@ def choice_to_value(row):
 def vernier_plot(df, **kwargs):
     fig, ax = plt.subplots()   
     df['choice_bin'] = df.apply(lambda row: choice_to_value(row), axis = 1)
-    df.groupby(['offset']).mean().plot(y = 'choice_bin', marker = 'o', linestyle = '', ax = ax)
+    df.groupby(['    ']).mean().plot(y = 'choice_bin', marker = 'o', linestyle = '', ax = ax)
     ax.legend().set_visible(False)
     if kwargs:
         ax.xaxis.set_ticks(kwargs['ticks'])

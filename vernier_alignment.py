@@ -15,52 +15,65 @@ Created on Thu Nov 21 15:13:17 2019
 @author: Tom Smart
 """
 
-
 import numpy as np
 from psychopy import data, event
 import traceback
 import vernier_alignment_functions as funs
-import constant
 from datetime import datetime
 import pyo
 import time
-## CONSTANTS ##
 
-pix2deg = 0.0021
-pix2arcmin = pix2deg / 60 
 
-## VARIABLES ##
+""" This variable can be used to enter the trial mode which displays lines on this
+monitor, rather than the OLEDS. The size and displacements of the lines are
+scaled down by a factor of two in the test mode. """
+
+run_type = 'test'
+
+shape_parameters = {}
 
 """ user defines orientation - this determines the orientation of the two 
 lines"""
-
-theta = np.radians(int(input("Enter orientation in degrees: ")))
-rotate_mat = funs.rotation_matrix(theta)
-reflect_mat = constant.reflect_mat
+shape_parameters['theta'] = np.radians(int(input("Enter orientation in degrees: ")))
 
 
-""" The position of the two lines changes randomly  between each trial. 
+""" Establish constants """
+pix2deg = 0.0021
+pix2arcmin = pix2deg / 60 
+rotate_mat = funs.rotation_matrix(shape_parameters['theta'])
+reflect_mat = funs.reflection_matrix()
+
+
+""" The position of the two lines change randomly between each trial. 
 Parameters are set here."""
- 
 # minimum central position of line pair
 min_pos = -20
 # maximum central position of line pair  
 max_pos = 20    
 
 
-""" The offset between the two lines (that is, the amount by which the two 
-lines do not line up) change between each trial. Parameters set here. """
+""" Line appearence parameters """
+shape_parameters['line_width'] = 2
+shape_parameters['line_length'] = 100
+   
+""" separation of line ends """
+shape_parameters['line_displacement'] = 12  
 
-# largest negative offset (i.e. green below red)
-offset_low = 5
-# largest positive offset
-offset_high = 25   
-# offset increment
-offset_step_size = 2  
-# generate array of possible offset values
-offsets = np.arange(offset_low, 
-                    offset_high + offset_step_size, 
-                    offset_step_size)   
+""" colors """
+shape_parameters['line_color'] = [1, 1, 1]
+shape_parameters['background_color'] = 0.8 * np.array([-1, -1, -1])
+
+""" position lines on one side of screen """
+screen_position_offset = -200
+shape_parameters['screen_position'] = np.array([[0], [screen_position_offset]])
+
+
+""" Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] 
+to allow multiplication by rotation matrix. For Psychopy, this needs to be 
+transposed to become [[x1, y1], [x2,y2], ..., [xn, yn]]. """
+
+# line_vertices = np.array([[-line_length/2, line_length/2], [0, 0]])
+# line_pos = np.array([[line_length/2 + line_displacement], [0]])
 
 
 """ The number of trials and possible subject keyboard inputs"""
@@ -69,32 +82,21 @@ n_reps = 5
 key_list = ['num_1', 'num_2', 'num_3', \
             'num_4', 'num_5', 'num_6', \
             'num_7', 'num_8', 'num_9', \
-            'escape']   
+            'escape']  
 
+""" The offset between the two lines (that is, the amount by which the two 
+lines do not line up) change between each trial. Parameters set here. """
 
-""" Line appearence parameters """
-
-line_width = 2
-line_length = 100
-   
-""" separation of line ends """
-line_displacement = 12  
-
-""" colors """
-line_color = [1, 1, 1]
-background_color = 0.8*np.array([-1, -1, -1])
-
-""" position lines on one side of screen """
-screen_position = 200
-
-
-""" Line vertices aranged here as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] 
-to allow multiplication by rotation matrix. For Psychopy, this needs to be 
-transposed to become [[x1, y1], [x2,y2], ..., [xn, yn]]. """
-
-line_vertices = np.array([[-line_length/2, line_length/2], [0, 0]])
-line_pos = np.array([[line_length/2 + line_displacement], [0]])
-
+# largest negative offset (i.e. green below red)
+offset_low = -10
+# largest positive offset
+offset_high = 10   
+# offset increment
+offset_step_size = 2  
+# generate array of possible offset values
+offsets = np.arange(offset_low, 
+                    offset_high + offset_step_size, 
+                    offset_step_size)
 
 """ Initialise trial data dictionary and list of dictionaries """
 trial = {}  # initialise trial parameters dictionary
@@ -110,22 +112,19 @@ for offset in offsets:
 trial_data = data.TrialHandler(trial_list, n_reps, method = 'random')
 
 """ Add additional trial information """
-participant_name = input('Participant name: ')
-trial_date = datetime.now().strftime("%d-%m-%Y, %H-%M-%S")
-trial_data.extraInfo = {
-        'participant' : participant_name,
-        'date' : trial_date,
-        'orientation' : theta,
-        'screen_position' : screen_position,
-        }
+if run_type == 'trial':
+    participant_name = input('Participant name: ')
+    trial_date = datetime.now().strftime("%d-%m-%Y, %H-%M-%S")
+    trial_data.extraInfo = {
+            'participant' : participant_name,
+            'date' : trial_date,
+            'orientation' : shape_parameters['theta'],
+            'screen_position' : shape_parameters['screen_position'],
+            }
+    
+    file_name = f"data\{participant_name}, ori = {int(np.rad2deg(shape_parameters['theta']))}, date = {trial_date}"
 
-file_name = f"data\{participant_name}, ori = {int(np.rad2deg(theta))}, date = {trial_date}"
 
-""" This can be used to enter the trial mode which displays lines on this
-monitor, rather than the OLEDS. The size and displacements of the lines are
-scaled down by a factor of two in the test mode. """
-
-run_type = 'trial'
 
 
 """
@@ -143,11 +142,8 @@ to avoid kernel death """
 try:
 #    pass
     if run_type == 'test':
-        win, line1, line2 = funs.initialise_test(line_width, 
-                                                   line_vertices, 
-                                                   line_pos,
-                                                   rotate_mat,
-                                                   )
+        win, line1, line2, shape_parameters['shape_vertices'], shape_parameters['shape_position']= funs.initialise_test(shape_parameters, rotate_mat, reflect_mat)
+        
     else:
         mon1, mon2, win1, win2, line1, line2 = funs.initialise_oleds(line_width, 
                                                               line_vertices, 
@@ -156,9 +152,7 @@ try:
                                                               rotate_mat,
                                                               background_color,
                                                               )
-    
-    line1.pos += np.array([screen_position, 0])
-    line2.pos += reflect_mat.dot(np.array([screen_position, 0]))
+
     
 except Exception:
     traceback.print_exc()
