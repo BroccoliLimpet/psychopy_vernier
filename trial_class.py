@@ -12,12 +12,12 @@ vernier_trial = collections.namedtuple('trial', ['orientation','offset'])
 
 class vernier_trial_list:
     
-    def __init__(self, orientations = np.array([0,90,180,270]), offsets = np.arange(-10,12,2)):
+    def __init__(self, orientations = np.array([0,90,180,270]), offsets = np.arange(-10,12,2), nreps = 1):
         self.orientations = orientations
         self.offsets = offsets
         self._trials = [vernier_trial(orientation, offset) 
                         for orientation in self.orientations 
-                        for offset in self.offsets]
+                        for offset in self.offsets]*nreps
         
     def __len__(self):
         return len(self._trials)

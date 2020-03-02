@@ -15,20 +15,26 @@ Created on Thu Nov 21 15:13:17 2019
 @author: Tom Smart
 """
 
+import traceback, os, pyo, time
 import numpy as np
-from psychopy import data, event
-import traceback
-import vernier_alignment_functions as funs
+import pandas as pd
+from psychopy import event
 from datetime import datetime
-import pyo
-import time
+
+import vernier_alignment_functions as funs
 import trial_class
 
 
 """ Set this variable to 'test' to run in test mode. The shapes are displayed
-on this monitor, rather than the external OLEDs. """
+on this monitor, rather than the external OLEDs. Set variable to 'trial'
+(or anyhting else != 'test') to run in trial mode - images will be displayed on OLEDS """
 
 run_type = 'trial'
+if run_type != 'test':
+    participant_name = input('Participant name: ')
+    trial_date = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
+    file_name = f"{participant_name} = {trial_date}"
+
 
 """ Shape (line) parameters """
 shape_parameters = {}
@@ -40,14 +46,8 @@ shape_parameters['screen_position'] = 100
 shape_parameters['background_color'] = 0.8 * np.array([-1, -1, -1])
 
 
-
 """ Trial parameters """ 
 trial_parameters = {}
-trial_parameters['n_reps'] = 5 
- 
-
-""" The offset between the two lines (that is, the amount by which the two 
-lines do not line up) change between each trial. Parameters set here. """
 # largest negative offset (i.e. green below red)
 offset_low = -10
 # largest positive offset
@@ -57,11 +57,15 @@ offset_step_size = 20
 # generate array of possible offset values
 trial_parameters['offsets'] = np.arange(offset_low, offset_high + offset_step_size, offset_step_size)
 trial_parameters['orientations'] = [0, 90, 180, 270]
-
+trial_parameters['nreps'] = 2
 
 """ Build trial list class """
-trial_list = trial_class.vernier_trial_list(trial_parameters['orientations'], trial_parameters['offsets'])
-trial_list.shuffle_trials()
+# uses purpose built 'trial' class
+trial_list = trial_class.vernier_trial_list(trial_parameters['orientations'],
+                                            trial_parameters['offsets'],
+                                            trial_parameters['nreps'],
+                                            )
+trial_list.shuffle_trials() 
 
 
 """ Initialise sounds """
@@ -71,10 +75,15 @@ tone = pyo.Sine(mul = 0.5, freq = 500)
 
 
 """ Possible subject keyboard inputs """
-key_list = ['num_1', 'num_2', 'num_3', \
-            'num_4', 'num_5', 'num_6', \
-            'num_7', 'num_8', 'num_9', \
-            'escape']
+key_choices = {
+        'vert' : ['num_4','num_6','escape'],
+        'horiz' : ['num_2','num_8','escape'],
+        }
+
+
+""" Data structure """
+
+trial_data = []
 
 
 """ Initialise monitors, windows and shapes. A try/except/else structures 
@@ -87,17 +96,39 @@ try:
     
 except Exception:
     traceback.print_exc()
-    
+
 else:
+    
+    """ Trial starts here """
+
     try:
         for trial in trial_list:
             line1, line2 = funs.update_shapes(line1, line2, shape_parameters, trial, run_type)
             line1.draw()
             line2.draw()
             [win.flip() for win in wins]
-            event.waitKeys()
+            
+            if trial.orientation in [0, 180]:
+                key_choice = event.waitKeys(keyList = key_choices['horiz'])
+            elif trial.orientation in [90, 270]:
+                key_choice = event.waitKeys(keyList = key_choices['vert'])                
+            tone.out()
+            time.sleep(0.2)
+            tone.stop()
+            
+            if key_choice[0] == 'escape':
+                break
+            else:
+                trial_data.append({'orientation' : trial.orientation,
+                             'offset' : trial.offset,
+                             'key_choice' : key_choice[0]
+                             })
+            
         [win.close() for win in wins]
         soundserver.stop()
+        df = pd.DataFrame(trial_data)
+        if run_type != 'test':
+            df.to_csv(os.path.join(os.getcwd(),'data',file_name), sep = '\t')
     
     except Exception:
         """ Close windows """
@@ -105,73 +136,4 @@ else:
         soundserver.stop()
         traceback.print_exc()
         
-    
-    
-    # """ Trial starts here. """
-
-    # try:
-    #     line1_init = line1.pos
-    #     line2_init = line2.pos
-    #     for this_trial in trial_list:
-            
-            
-    #         line1_shift = np.array([[0], [this_trial['position']]])
-    #         line2_shift = np.array([[0], [this_trial['position'] + this_trial['offset']]])
-
-    #         if run_type == 'test':
-    #             line1.pos = line1.pos + rotate_mat.dot(line1_shift).transpose()
-    #             line1.draw()
-                
-    #             line2.pos = line2.pos + rotate_mat.dot(line2_shift).transpose()
-    #             line2.draw()                
-                
-    #         else:
-    #             line1.pos = line1_init + rotate_mat.dot(line1_shift).transpose()
-    #             line1.draw()
-                
-    #             line2.pos = line2_init + reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(line2_shift))).transpose()
-    #             line2.draw()
-            
-    #         if run_type == 'test':
-    #             win.flip()
-            
-    #         else:
-    #             win1.flip()
-    #             win2.flip()
-            
-    #         choice = event.waitKeys(keyList = key_list)
-    #         tone.out()
-    #         time.sleep(0.2)
-    #         tone.stop()
-            
-    #         if choice[0] == 'escape':
-    #             break
-    #         else:
-    #             trial_data.addData('choice', choice[0])
-                
-            
-            
-            
-    #     if run_type == 'test':
-    #         win.close()
-    #     else:
-    #         win1.close()
-    #         win2.close()    
-        
-    #     if run_type != 'test':
-    #         """ Save output as a text doc and create a panda dataframe"""
-    #         df = trial_data.saveAsWideText(fileName = file_name,
-    #                               appendFile = False,
-    #                               )
-    #         fig, ax = funs.vernier_plot(df, ticks = offsets)
-    #         popt, copt = funs.vernier_fit(list(df.offset), list(df.choice_bin), ax)
-
-                              
-    # except Exception:
-    #     """ Close windows """
-    #     traceback.print_exc()
-    #     if run_type == 'test':            win.close()
-    #     else:
-    #         win1.close()
-    #         win2.close()
-    #         soundserver.stop()            
+          

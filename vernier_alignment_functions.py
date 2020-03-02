@@ -28,8 +28,10 @@ def rotation_matrix(theta):
 
 
 def initialise_shapes(shape_parameters, run_type):
+    
     if run_type == 'test':
-        win = visual.Window(color = shape_parameters['background_color'])
+        win = visual.Window(screen = 1,
+                            color = shape_parameters['background_color'])
     
         """ Create lines to be presented on screens. Line vertices aranged here 
         as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] to allow multiplication by 
@@ -60,6 +62,7 @@ def initialise_shapes(shape_parameters, run_type):
         
         return ([win], shape_red, shape_green, shape_parameters)
     
+    
     else:
         """ One set of coordinates is used for both lines, but the position of 
         line 2 is the relfection in the y-axis. Screen 2 is seen as a reflection #
@@ -71,7 +74,7 @@ def initialise_shapes(shape_parameters, run_type):
         rotation matrix. For Psychopy, this needs to be transposed to become
         [[x1, y1], [x2,y2], ..., [xn, yn]]. """
         shape_vertices = np.array([ [-shape_parameters['line_length']/2, shape_parameters['line_length']/2], [0, 0] ])
-        shape_position =  np.array([shape_parameters['line_length']/2 + shape_parameters['line_displacement'] + shape_parameters['screen_position'], 0])
+        shape_position =  np.array([0, shape_parameters['line_length']/2 + shape_parameters['line_displacement'] + shape_parameters['screen_position']])
         
         """ add values to shape parameters dictionary """
         shape_parameters['vertices'] = shape_vertices
@@ -86,7 +89,7 @@ def initialise_shapes(shape_parameters, run_type):
         win1 = visual.Window(size = mon1.getSizePix(),
                             monitor = mon1,
                             winType = "pyglet",
-                            screen = 1,
+                            screen = 2,
     #                        color = [0.2, 0.2, 0.2],
                             color = shape_parameters['background_color'],
                             )
@@ -94,7 +97,7 @@ def initialise_shapes(shape_parameters, run_type):
         win2 = visual.Window(size = mon2.getSizePix(),
                             monitor = mon2,
                             winType = "pyglet",
-                            screen = 2,
+                            screen = 3,
                             color = shape_parameters['background_color'],
                             )
         
@@ -119,98 +122,6 @@ def initialise_shapes(shape_parameters, run_type):
         
         return wins, shape1, shape2, shape_parameters
 
-# def initialise_test(shape_parameters):
-  
-#     win = visual.Window(color = shape_parameters['background_color'])    
-    
-#     """ Create lines to be presented on screens. Line vertices aranged here 
-#     as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] to allow multiplication by 
-#     rotation matrix. For Psychopy, this needs to be transposed to become
-#     [[x1, y1], [x2,y2], ..., [xn, yn]]. """
-#     shape_vertices = np.array([ [-shape_parameters['line_length']/2, shape_parameters['line_length']/2], [0, 0] ])
-#     shape_position =  np.array([shape_parameters['line_length']/2 + shape_parameters['line_displacement'] + shape_parameters['screen_position'], 0])
-    
-#     """ add values to shape parameters dictionary """
-#     shape_parameters['vertices'] = shape_vertices
-#     shape_parameters['position'] = shape_position
-        
-#     """ red line """
-#     shape_red = visual.ShapeStim(win, 
-#                              units = "pix",
-#                              vertices = shape_vertices.transpose(),
-#                              pos = shape_position.transpose(),
-#                              lineColor = [1, -1, -1], #shape_parameters['line_color'],
-#                              )
-        
-#     """ green line """                        
-#     shape_green = visual.ShapeStim(win,
-#                               units = "pix",
-#                               vertices = shape_vertices.transpose(),
-#                               pos = shape_position.transpose(), # pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(shape_position))).transpose(),
-#                               lineColor = [-1, 1, -1], #shape_parameters['line_color'],
-#                               )
-    
-#     return (win, shape_red, shape_green, shape_parameters)
-    
-    
-# def initialise_oleds(shape_parameters):
-#     """ One set of coordinates is used for both lines, but the position of 
-#     line 2 is the relfection in the y-axis. Screen 2 is seen as a reflection #
-#     of itself, due to the reflection at the beam splitter. To counteract this, 
-#     the line is reflected in the y-axis for a second time."""
-        
-#     """ Create lines to be presented on screens. Line vertices aranged here 
-#     as [[x1, x2, ..., xn], [y1, y2, y3, ..., yn]] to allow multiplication by 
-#     rotation matrix. For Psychopy, this needs to be transposed to become
-#     [[x1, y1], [x2,y2], ..., [xn, yn]]. """
-#     shape_vertices = np.array([ [-shape_parameters['line_length']/2, shape_parameters['line_length']/2], [0, 0] ])
-#     shape_position =  np.array([shape_parameters['line_length']/2 + shape_parameters['line_displacement'] + shape_parameters['screen_position'], 0])
-    
-#     """ add values to shape parameters dictionary """
-#     shape_parameters['vertices'] = shape_vertices
-#     shape_parameters['position'] = shape_position
-    
-    
-#     """ Gain access to calibration/screen information """
-#     mon1 = monitors.Monitor('whiteOLED_2_SADK_luma1200')  
-#     mon2 = monitors.Monitor('whiteOLED_1_SADK_luma1200')  
-    
-#     """ Initialise windows  """
-#     win1 = visual.Window(size = mon1.getSizePix(),
-#                         monitor = mon1,
-#                         winType = "pyglet",
-#                         screen = 1,
-# #                        color = [0.2, 0.2, 0.2],
-#                         color = shape_parameters['background_color'],
-#                         )
-                     
-#     win2 = visual.Window(size = mon2.getSizePix(),
-#                         monitor = mon2,
-#                         winType = "pyglet",
-#                         screen = 2,
-#                         color = shape_parameters['background_color'],
-#                         )
-      
-    
-#     """ Create shapes to be presented on screens """
-#     shape1 = visual.ShapeStim(win1,
-#                              units = "pix",
-#                              lineWidth = shape_parameters['line_width'],
-#                              vertices = rotate_mat.dot(shape_vertices).transpose(),
-#                              lineColor = shape_parameters['line_color'],   # adust brightness (correct terminology? probs not)
-#                              pos = rotate_mat.dot(shape_position).transpose(), 
-#                              )
-                             
-#     shape2 = visual.ShapeStim(win2,
-#                              units = "pix",
-#                              lineWidth = line_width,
-#                              vertices = reflect_mat.dot(rotate_mat.dot(shape_vertices)).transpose(),
-#                              lineColor = line_color,
-#                              pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(shape_position))).transpose(),
-#                              )
-    
-#     return win1, win2, shape1, shape2, shape_parameters
-
 
 def update_shapes(shape1, shape2, shape_parameters, trial, run_type):
     rotate_mat = rotation_matrix(np.radians(trial.orientation))
@@ -227,6 +138,7 @@ def update_shapes(shape1, shape2, shape_parameters, trial, run_type):
         shape1.vertices = rotate_mat.dot(shape_parameters['vertices']).transpose()
         shape2_shift = shape_parameters['position'] + np.array([0, trial.offset])
         shape2.pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(shape2_shift))).transpose()
+#        shape2.pos = rotate_mat.dot(shape2_shift).transpose()
         shape2.vertices = rotate_mat.dot(shape_parameters['vertices']).transpose()
     
     return shape1, shape2
