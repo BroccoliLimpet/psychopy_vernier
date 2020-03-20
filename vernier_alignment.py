@@ -28,12 +28,11 @@ import trial_class
 """ Set this variable to 'test' to run in test mode. The shapes are displayed
 on this monitor, rather than the external OLEDs. Set variable to 'trial'
 (or anyhting else != 'test') to run in trial mode - images will be displayed on OLEDS """
-
 run_type = 'trial'
 if run_type != 'test':
     participant_name = input('Participant name: ')
     trial_date = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
-    file_name = f"{participant_name} = {trial_date}"
+    file_name = f"{participant_name} {trial_date}"
 
 
 """ Shape (line) parameters """
@@ -44,20 +43,20 @@ shape_parameters['line_color'] = [1, 1, 1]
 shape_parameters['line_displacement'] = 10
 shape_parameters['screen_position'] = 100
 shape_parameters['background_color'] = 0.8 * np.array([-1, -1, -1])
-
+shape_parameters['correction'] = [7, 7]
 
 """ Trial parameters """ 
 trial_parameters = {}
 # largest negative offset (i.e. green below red)
-offset_low = -10
+offset_low = -15
 # largest positive offset
-offset_high = 10   
+offset_high = 15   
 # offset increment
-offset_step_size = 20
+offset_step_size = 5
 # generate array of possible offset values
 trial_parameters['offsets'] = np.arange(offset_low, offset_high + offset_step_size, offset_step_size)
 trial_parameters['orientations'] = [0, 90, 180, 270]
-trial_parameters['nreps'] = 2
+trial_parameters['nreps'] = 3
 
 """ Build trial list class """
 # uses purpose built 'trial' class
@@ -82,14 +81,12 @@ key_choices = {
 
 
 """ Data structure """
-
 trial_data = []
 
 
 """ Initialise monitors, windows and shapes. A try/except/else structures 
 should prevent a window being presented if there is an error in set-up (aiming
 to avoid kernel death!) """
-
 try:
     wins, line1, line2, shape_parameters = funs.initialise_shapes(shape_parameters, run_type)
 
@@ -100,10 +97,9 @@ except Exception:
 else:
     
     """ Trial starts here """
-
     try:
         for trial in trial_list:
-            line1, line2 = funs.update_shapes(line1, line2, shape_parameters, trial, run_type)
+            line1, line2 = funs.update_shapes(line1, line2, shape_parameters, trial.orientation, trial.offset , run_type)
             line1.draw()
             line2.draw()
             [win.flip() for win in wins]
@@ -123,10 +119,18 @@ else:
                              'offset' : trial.offset,
                              'key_choice' : key_choice[0]
                              })
-            
+    
+        """ End trial """
         [win.close() for win in wins]
         soundserver.stop()
         df = pd.DataFrame(trial_data)
+        fit_results = {}
+        for orientation in trial_parameters['orientations']:
+            fit_results[orientation] = funs.vernier_analysis(
+                    df.sort_values('offset').loc[df['orientation'] == orientation], 
+                    plot_title = str(orientation),
+                    )
+        table = funs.tabulate_results(trial_parameters['orientations'], fit_results)
         if run_type != 'test':
             df.to_csv(os.path.join(os.getcwd(),'data',file_name), sep = '\t')
     

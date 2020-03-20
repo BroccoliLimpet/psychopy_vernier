@@ -13,7 +13,10 @@ from tkinter import filedialog
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import config
-import pdb
+#import pdb
+import traceback
+from tabulate import tabulate
+
 
 def reflection_matrix():
     """ creates a matrix that reflects in the x = 0 axis"""
@@ -27,10 +30,10 @@ def rotation_matrix(theta):
     return rotation_mat
 
 
-def initialise_shapes(shape_parameters, run_type):
+def initialise_shapes(shape_parameters, run_type = 'trial'):
     
     if run_type == 'test':
-        win = visual.Window(screen = 1,
+        win = visual.Window(screen = 2,
                             color = shape_parameters['background_color'])
     
         """ Create lines to be presented on screens. Line vertices aranged here 
@@ -38,7 +41,7 @@ def initialise_shapes(shape_parameters, run_type):
         rotation matrix. For Psychopy, this needs to be transposed to become
         [[x1, y1], [x2,y2], ..., [xn, yn]]. """
         shape_vertices = np.array([ [-shape_parameters['line_length']/2, shape_parameters['line_length']/2], [0, 0] ])
-        shape_position =  np.array([0, shape_parameters['line_length']/2 + shape_parameters['line_displacement'] + shape_parameters['screen_position']])
+        shape_position =  np.array([shape_parameters['line_length']/2 + shape_parameters['line_displacement'], shape_parameters['screen_position']])
         
         """ add values to shape parameters dictionary """
         shape_parameters['vertices'] = shape_vertices
@@ -74,7 +77,7 @@ def initialise_shapes(shape_parameters, run_type):
         rotation matrix. For Psychopy, this needs to be transposed to become
         [[x1, y1], [x2,y2], ..., [xn, yn]]. """
         shape_vertices = np.array([ [-shape_parameters['line_length']/2, shape_parameters['line_length']/2], [0, 0] ])
-        shape_position =  np.array([0, shape_parameters['line_length']/2 + shape_parameters['line_displacement'] + shape_parameters['screen_position']])
+        shape_position =  np.array([shape_parameters['line_length']/2 + shape_parameters['line_displacement'], shape_parameters['screen_position']])
         
         """ add values to shape parameters dictionary """
         shape_parameters['vertices'] = shape_vertices
@@ -86,20 +89,21 @@ def initialise_shapes(shape_parameters, run_type):
         mon2 = monitors.Monitor('whiteOLED_1_SADK_luma1200')  
         
         """ Initialise windows  """
-        win1 = visual.Window(size = mon1.getSizePix(),
-                            monitor = mon1,
-                            winType = "pyglet",
-                            screen = 2,
-    #                        color = [0.2, 0.2, 0.2],
-                            color = shape_parameters['background_color'],
-                            )
+        win1 = visual.Window(
+                size = mon1.getSizePix(),
+                monitor = mon1,
+                winType = "pyglet",
+                screen = 0,
+                color = shape_parameters['background_color'],
+                )
                          
-        win2 = visual.Window(size = mon2.getSizePix(),
-                            monitor = mon2,
-                            winType = "pyglet",
-                            screen = 3,
-                            color = shape_parameters['background_color'],
-                            )
+        win2 = visual.Window(
+                size = mon2.getSizePix(),
+                monitor = mon2,
+                winType = "pyglet",
+                screen = 1,
+                color = shape_parameters['background_color'],
+                )
         
         wins = [win1, win2]
         
@@ -123,25 +127,26 @@ def initialise_shapes(shape_parameters, run_type):
         return wins, shape1, shape2, shape_parameters
 
 
-def update_shapes(shape1, shape2, shape_parameters, trial, run_type):
-    rotate_mat = rotation_matrix(np.radians(trial.orientation))
+def update_shapes(shape1, shape2, shape_parameters, orientation = 0, offset = 0, run_type = 'trial'):
+    rotate_mat = rotation_matrix(np.radians(orientation))
     reflect_mat = config.reflect_mat
     
     if run_type == 'test':
         shape1.pos = rotate_mat.dot(shape_parameters['position']).transpose()
         shape1.vertices = rotate_mat.dot(shape_parameters['vertices']).transpose()
-        shape2.pos = rotate_mat.dot(shape_parameters['position'] + np.array([0, trial.offset])).transpose()
+        shape2.pos = rotate_mat.dot(shape_parameters['position'] + np.array([0, offset])).transpose() + shape_parameters['correction']
         shape2.vertices = rotate_mat.dot(shape_parameters['vertices']).transpose()
         
     else:
         shape1.pos = rotate_mat.dot(shape_parameters['position']).transpose()
         shape1.vertices = rotate_mat.dot(shape_parameters['vertices']).transpose()
-        shape2_shift = shape_parameters['position'] + np.array([0, trial.offset])
-        shape2.pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(shape2_shift))).transpose()
+        shape2_shift = shape_parameters['position'] + np.array([0, offset])
+        shape2.pos = reflect_mat.dot(rotate_mat.dot(reflect_mat.dot(shape2_shift))).transpose() + shape_parameters['correction']
 #        shape2.pos = rotate_mat.dot(shape2_shift).transpose()
         shape2.vertices = rotate_mat.dot(shape_parameters['vertices']).transpose()
     
     return shape1, shape2
+
 
 def csv_to_dataframe_filepath(file_path, **kwargs):
     # read file in as data frame
@@ -153,7 +158,6 @@ def csv_to_dataframe_filepath(file_path, **kwargs):
     
     # return the dataframe
     return df
-
 
 
 def csv_to_dataframe_gui(**kwargs):
@@ -170,18 +174,19 @@ def csv_to_dataframe_gui(**kwargs):
         df = df.sort_values(kwargs["sort"])
     
     # return the dataframe
-    return df
+    return df, file_path
+
 
 def choice_to_value(row):
-    if row['choice'] in ['num_1', 'num_4', 'num_7'] or row['choice'] in ['num_7', 'num_8', 'num_9']:
+    if row['key_choice'] in ['num_4', 'num_8']:
         return 1
-    elif row['choice'] in ['num1', 'num_2', 'num_3'] or row['choice'] in ['num_3', 'num_6', 'num_9']:
+    elif row['key_choice'] in ['num_2', 'num_6']:
         return 0
     
 def vernier_plot(df, **kwargs):
     fig, ax = plt.subplots()   
     df['choice_bin'] = df.apply(lambda row: choice_to_value(row), axis = 1)
-    df.groupby(['    ']).mean().plot(y = 'choice_bin', marker = 'o', linestyle = '', ax = ax)
+    df.groupby(['offset']).mean().plot(y = 'choice_bin', marker = 'o', linestyle = '', ax = ax)
     ax.legend().set_visible(False)
     if kwargs:
         ax.xaxis.set_ticks(kwargs['ticks'])
@@ -192,10 +197,31 @@ def sigmoid(x, x0, k):
     y = 1 / (1 + np.exp(-k*(x-x0)))
     return y
 
-def vernier_fit(x,y,ax):
-#    plt.plot(x,y)
-    popt, copt = curve_fit(sigmoid, x, y)
-    x_fit = np.linspace(min(x), max(x), 1e3)
-    ax.plot(x_fit, sigmoid(x_fit, *popt))
-    return popt, copt
 
+def vernier_fit(x,y,p0,ax):
+    try:
+        popt, pcov = curve_fit(sigmoid, x, y, p0)
+        x_fit = np.linspace(min(x), max(x), 1e3)
+        ax.plot(x_fit, sigmoid(x_fit, *popt))
+        return {'popt' : popt, 'pcov' : pcov}
+    except Exception:
+        traceback.print_exc()
+
+
+def vernier_analysis(df, plot_title):    
+    df['choice_bin'] = df.apply(lambda row: choice_to_value(row), axis = 1)
+    fig, ax = plt.subplots()
+    df.groupby(['offset']).mean().plot(y = 'choice_bin', marker = 'o', linestyle = '', ax = ax)
+    ax.legend().set_visible(False)
+    ax.set_title(plot_title)
+    fit_results = vernier_fit(df.offset, df.choice_bin, (10,0), ax)
+    return fit_results
+
+def tabulate_results(orientations, fit_results):
+    orientations.sort()
+    table = []
+    for orientation in orientations:
+        table.append([orientation, fit_results[orientation]['popt'][0]])
+    print(tabulate(table, headers = ["Orientation", "Offset"]))
+    return table
+    
