@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Script to present horizontal (or vertical) lines to a subject that are slightly
+Script to present pairs of lines to a subject that are slightly
 displaced from one another.
 
 The user is asked to decided whether a certain line is above or below (or to
@@ -28,7 +28,7 @@ import trial_class
 """ Set this variable to 'test' to run in test mode. The shapes are displayed
 on this monitor, rather than the external OLEDs. Set variable to 'trial'
 (or anyhting else != 'test') to run in trial mode - images will be displayed on OLEDS """
-run_type = 'trial'
+run_type = 'test'
 if run_type != 'test':
     participant_name = input('Participant name: ')
     trial_date = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
@@ -45,21 +45,18 @@ shape_parameters['screen_position'] = 100
 shape_parameters['background_color'] = 0.8 * np.array([-1, -1, -1])
 shape_parameters['correction'] = [7, 7]
 
+
 """ Trial parameters """ 
 trial_parameters = {}
-# largest negative offset (i.e. green below red)
 offset_low = -15
-# largest positive offset
-offset_high = 15   
-# offset increment
+offset_high = 15
 offset_step_size = 5
-# generate array of possible offset values
 trial_parameters['offsets'] = np.arange(offset_low, offset_high + offset_step_size, offset_step_size)
 trial_parameters['orientations'] = [0, 90, 180, 270]
-trial_parameters['nreps'] = 3
+trial_parameters['nreps'] = 3 
 
-""" Build trial list class """
-# uses purpose built 'trial' class
+
+""" Build trial list class - # uses purpose built 'vernier_trial_list' class"""
 trial_list = trial_class.vernier_trial_list(trial_parameters['orientations'],
                                             trial_parameters['offsets'],
                                             trial_parameters['nreps'],
@@ -80,7 +77,7 @@ key_choices = {
         }
 
 
-""" Data structure """
+""" Create a list to store trial data """
 trial_data = []
 
 
@@ -93,6 +90,7 @@ try:
     
 except Exception:
     traceback.print_exc()
+
 
 else:
     
