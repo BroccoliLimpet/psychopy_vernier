@@ -10,4 +10,4 @@ You will need to have installed the following programs.
 * [Git](https://git-scm.com/download/win)
 
 ### Installation 
-Clone the git repository: <pre><code> hello <code><pre>
+Clone the git repository: `git clone https://github.com/tomjsmart/psychopy_vernier`
