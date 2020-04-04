@@ -1,2 +1,4 @@
-# psychopy_vernier
-psychophysical vernier alignment
+# Vernier Alignment
+A set of functions to facilitate psycho-physical vernier alignment test.
+
+
