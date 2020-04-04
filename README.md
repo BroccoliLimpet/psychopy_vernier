@@ -6,7 +6,7 @@ You will need to have installed the following programs.
 
 # Prerequisites
 * [Anaconda for Python 3](https://www.anaconda.com/distribution/)
-* [PsychoPy]((https://github.com/psychopy/psychopy))
+* [PsychoPy](https://github.com/psychopy/psychopy)
 * [Git](https://git-scm.com/download/win)
 
 
