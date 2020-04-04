@@ -1,26 +1,4 @@
-<<<<<<< HEAD
-""" This is a psychopy script that uses vernier alignment to align two displays.
 
-Created by Tom Smart, 25 Nov 2019 """ 
-
-
-from psychopy import visual, event
-import numpy as np
-
-win = visual.Window()
-
-shape = visual.ShapeStim(win,
-						units = "pix",
-						vertices = ((-100,0),(100,0))
-						)
-shape.draw()
-
-win.flip()
-
-event.waitKeys()
-
-win.close()
-=======
 # -*- coding: utf-8 -*-
 """
 Script to present pairs of lines to a subject that are slightly
@@ -161,5 +139,4 @@ else:
         soundserver.stop()
         traceback.print_exc()
         
-          
->>>>>>> 5961dcabeab76d4e0c227a13f123821e5f0ce066
+
