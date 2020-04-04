@@ -9,6 +9,5 @@ You will need to have installed the following programs.
 * [PsychoPy](https://github.com/psychopy/psychopy)
 * [Git](https://git-scm.com/download/win)
 
-
-
-
+### Installation 
+Clone the git repository: <pre><code> hello <code><pre>
