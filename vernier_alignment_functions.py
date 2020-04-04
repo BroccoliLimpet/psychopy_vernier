@@ -12,7 +12,7 @@ import tkinter as tk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import config, traceback, collections, json, random
+import traceback, collections, json, random
 from tabulate import tabulate
 
 
@@ -91,22 +91,27 @@ def initialise_shapes(shape_parameters, run_type = 'test'):
         mon2 = monitors.Monitor('whiteOLED_1_SADK_luma1200')  
         
         """ Initialise windows  """
-        win1 = visual.Window(
-                size = mon1.getSizePix(),
-                monitor = mon1,
-                winType = "pyglet",
-                screen = 0,
-                color = shape_parameters['background_color'],
-                )
-                         
-        win2 = visual.Window(
-                size = mon2.getSizePix(),
-                monitor = mon2,
-                winType = "pyglet",
-                screen = 1,
-                color = shape_parameters['background_color'],
-                )
-        
+        win1 = visual.Window()
+        win1.winType = "pyglet",
+        win1.screen = 0,
+        win1.color = shape_parameters['background_color']
+        try:
+            win1.monitor = mon1
+            win1.size = mon1.getSizePix()
+        except:
+            print('using default window size')
+            
+                 
+        win2 = visual.Window()
+        win2.winType = "pyglet"
+        win2.screen = 1
+        win2.color = shape_parameters['background_color']
+        try:
+            win2.size = mon2.getSizePix()
+            win2.monitor = mon2
+        except:
+            print('using default window size')
+            
         wins = [win1, win2]
         
         """ Create shapes to be presented on screens """
@@ -135,7 +140,7 @@ def update_shapes(shape1, shape2, shape_parameters, orientation = 0, offset = 0,
     
     
     rotate_mat = rotation_matrix(np.radians(orientation))
-    reflect_mat = config.reflect_mat
+    reflect_mat = reflection_matrix()
     
     position = np.array(shape_parameters['position'])
     vertices = np.array(shape_parameters['vertices'])
@@ -190,9 +195,9 @@ def csv_to_dataframe_gui(**kwargs):
 
 
 def choice_to_value(row):
-    if row['key_choice'] in ['num_4', 'num_8']:
+    if row['key_choice'] in ['num_4', 'num_8', '4', '8','left','up']:
         return 1
-    elif row['key_choice'] in ['num_2', 'num_6']:
+    elif row['key_choice'] in ['num_2', 'num_6', '2', '6', 'right', 'down']:
         return 0
     
 def vernier_plot(df, **kwargs):
@@ -213,14 +218,15 @@ def sigmoid(x, x0, k):
 def vernier_fit(x,y,p0,ax):
     try:
         popt, pcov = curve_fit(sigmoid, x, y, p0)
-        x_fit = np.linspace(min(x), max(x), 1e3)
+        # pdb.set_trace()
+        x_fit = np.linspace(min(x), max(x), 1000)
         ax.plot(x_fit, sigmoid(x_fit, *popt))
         return {'popt' : popt, 'pcov' : pcov}
     except Exception:
         traceback.print_exc()
 
 
-def vernier_analysis(df, plot_title):    
+def vernier_analysis(df, plot_title = 'title'):    
     df['choice_bin'] = df.apply(lambda row: choice_to_value(row), axis = 1)
     fig, ax = plt.subplots()
     df.groupby(['offset']).mean().plot(y = 'choice_bin', marker = 'o', linestyle = '', ax = ax)
@@ -236,6 +242,7 @@ def tabulate_results(orientations, fit_results):
         table.append([orientation, fit_results[orientation]['popt'][0]])
     print(tabulate(table, headers = ["Orientation", "Offset"]))
     return table
+
 
 
 """ Trial class """
@@ -280,68 +287,90 @@ class vernier_trial_list:
     
 
 
-""" Test functions """
-
-if __name__ == '__main__':
-
-    run_type = 'test'
-
-    """ Shape (line) parameters """
-    with open("default_shape_parameters.json","r") as read_file:
-        shape_parameters = json.load(read_file)
 
 
-    """ Trial parameters """ 
-    with open("default_trial_parameters.json","r") as read_file:
-        trial_parameters = json.load(read_file)
-
-
-    """ Build trial list class - # uses purpose built 'vernier_trial_list' class"""
-    trial_list = vernier_trial_list(trial_parameters['orientations'],
-                                                trial_parameters['offsets'],
-                                                trial_parameters['nreps'],
-                                                )
-    
-    trial_list.shuffle_trials() 
-
-
-    """ Initialise monitors, windows and shapes. A try/except/else structures 
-    should prevent a window being presented if there is an error in set-up (aiming
-    to avoid kernel death!) """
-    try:
-        wins, line1, line2, shape_parameters = initialise_shapes(shape_parameters, 
-                                                                 run_type)
-
-    except Exception:
-        traceback.print_exc()
-
-    else:
-        
-        """ Trial starts here """
-        try:
-            for trial in trial_list:
-                line1, line2 = update_shapes(line1, 
-                                             line2, 
-                                             shape_parameters, 
-                                             trial.orientation, 
-                                             trial.offset, 
-                                             run_type)
-                line1.draw()
-                line2.draw()
-                [win.flip() for win in wins]
-                
-                key_choice = event.waitKeys()                
-
-                
-                if key_choice[0] == 'escape':
-                    break
-                
-        
-            """ End trial """
-            [win.close() for win in wins]
-
-        
-        except Exception:
-            """ Close windows """
-            [win.close() for win in wins]
-            traceback.print_exc()
+# =============================================================================
+# """ Test functions """
+# 
+# if __name__ == '__main__':
+# 
+#     run_type = 'test'
+# 
+#     """ Shape (line) parameters """
+#     with open("default_shape_parameters.json","r") as read_file:
+#         shape_parameters = json.load(read_file)
+# 
+# 
+#     """ Trial parameters """ 
+#     with open("default_trial_parameters.json","r") as read_file:
+#         trial_parameters = json.load(read_file)
+# 
+# 
+#     """ Build trial list class - # uses purpose-built 'vernier_trial_list' class"""
+#     trial_list = vernier_trial_list(trial_parameters['orientations'],
+#                                                 trial_parameters['offsets'],
+#                                                 trial_parameters['nreps'],
+#                                                 )
+#     
+#     trial_list.shuffle_trials() 
+#     
+#     trial_data = []
+# 
+# 
+#     """ Initialise monitors, windows and shapes. A try/except/else structures 
+#     should prevent a window being presented if there is an error in set-up (aiming
+#     to avoid kernel death!) """
+#     try:
+#         wins, line1, line2, shape_parameters = initialise_shapes(shape_parameters, 
+#                                                                  run_type)
+# 
+#     except Exception:
+#         traceback.print_exc()
+# 
+#     else:
+#         
+#         """ Trial starts here """
+#         try:
+#             for trial in trial_list:
+#                 line1, line2 = update_shapes(line1, 
+#                                              line2, 
+#                                              shape_parameters, 
+#                                              trial.orientation, 
+#                                              trial.offset, 
+#                                              run_type)
+#                 line1.draw()
+#                 line2.draw()
+#                 [win.flip() for win in wins]
+#                 
+#                 key_choice = event.waitKeys()                
+# 
+#                 
+#                 if key_choice[0] == 'escape':
+#                     break
+#                 else:
+#                     trial_data.append({'orientation' : trial.orientation,
+#                                  'offset' : trial.offset,
+#                                  'key_choice' : key_choice[0]
+#                                  })
+#                 
+#                 df = pd.DataFrame(trial_data)
+#                 fit_results = {}
+#                 
+#                 for orientation in trial_parameters['orientations']:
+#                     fit_results[orientation] = vernier_analysis(
+#                             df.sort_values('offset').loc[df['orientation'] == orientation], 
+#                             plot_title = str(orientation),
+#                             )
+#                     
+#                 table = tabulate_results(trial_parameters['orientations'], fit_results)
+#                 
+#         
+#             """ End trial """
+#             [win.close() for win in wins]
+# 
+#         
+#         except Exception:
+#             """ Close windows """
+#             [win.close() for win in wins]
+#             traceback.print_exc()
+# =============================================================================

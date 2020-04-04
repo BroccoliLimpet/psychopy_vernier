@@ -28,7 +28,7 @@ import trial_class
 """ Set this variable to 'test' to run in test mode. The shapes are displayed
 on this monitor, rather than the external OLEDs. Set variable to 'trial'
 (or anyhting else != 'test') to run in trial mode - images will be displayed on OLEDS """
-run_type = 'test'
+run_type = 'trial'
 if run_type != 'test':
     participant_name = input('Participant name: ')
     trial_date = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
@@ -42,7 +42,7 @@ shape_parameters['line_length'] = 100
 shape_parameters['line_color'] = [1, 1, 1]
 shape_parameters['line_displacement'] = 10
 shape_parameters['screen_position'] = 100
-shape_parameters['background_color'] = 0.8 * np.array([-1, -1, -1])
+shape_parameters['background_color'] = [-1, -1, -1]
 shape_parameters['correction'] = [7, 7]
 
 
@@ -72,8 +72,8 @@ tone = pyo.Sine(mul = 0.5, freq = 500)
 
 """ Possible subject keyboard inputs """
 key_choices = {
-        'vert' : ['num_4','num_6','escape'],
-        'horiz' : ['num_2','num_8','escape'],
+        'vert' : ['num_4', 'num_6', '4', '6', 'left', 'right', 'escape'],
+        'horiz' : ['num_2', 'num_8', '2', '8', 'up', 'down', 'escape'],
         }
 
 
