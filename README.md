@@ -1,4 +1,8 @@
 # Vernier Alignment
-A set of functions to facilitate a psycho-physical vernier alignment test using [PsychoPy](https://github.com/psychopy/psychopy)
+A set of Python functions to facilitate a psycho-physical alignment procedure making use of [Vernier acuity](https://en.wikipedia.org/wiki/Vernier_acuity). The code makes extensive use of [PsychoPy.](https://github.com/psychopy/psychopy)
+
+
+## Requirements
+
 
 
