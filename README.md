@@ -1,6 +1,8 @@
 # Vernier Alignment
 A set of Python functions to facilitate a psycho-physical alignment procedure making use of [Vernier hyperacuity](https://en.wikipedia.org/wiki/Vernier_acuity). The code makes extensive use of [PsychoPy.](https://github.com/psychopy/psychopy)
 
+![Image of Vernier Lines](https://github.com/tomjsmart/psychopy_vernier/demo_graphic.tif)
+
 The code was written with a specific example in mind, but could be easily modified. The example is as follows:
 * Two displays are combined by a beam-splitter and imaged onto a subject's retina. 
 * Each display is optically filtered - one at 510nm, the other at 630nm. 
