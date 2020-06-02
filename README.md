@@ -4,8 +4,8 @@ A set of Python functions to facilitate a psycho-physical alignment procedure ma
 ![Image of Vernier Lines](https://github.com/tomjsmart/psychopy_vernier/blob/master/demo_graphic.png)
 
 The code was written with a specific example in mind, but could be easily modified. The example is as follows:
-* Two displays are combined by a beam-splitter and imaged onto a subject's retina. 
-* Each display is optically filtered - one at 510nm, the other at 630nm. 
+* Two displays are viewed via a beam-splitter to create a combined image on a subject's retina. 
+* Each display is optically filtered - one at 510nm (appearing green), the other at 630nm (appearing red). 
 * To account for chromatic defocus in the subject's eye, the two displays are positioned at different distances from the first lens, creating a difference in scale on the retina
 * Chromatic aberration in the subject's eye will also cause the images to be offset from one another on the subject's retina.
 * To account for these differences in position and scale, a vernier acuity test is performed at four different orientations. The subject is asked to judge where a pair of lines from the two displays align.
