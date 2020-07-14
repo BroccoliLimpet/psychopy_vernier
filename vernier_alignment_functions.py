@@ -243,6 +243,21 @@ def tabulate_results(orientations, fit_results):
     print(tabulate(table, headers = ["Orientation", "Offset"]))
     return table
 
+def offset_and_scale(orientations, fit_results, shape_parameters):
+    R = [fit_results[orientation]['popt'][0] for orientation in orientations]
+    
+    x = R[0::2]
+    y = R[1::2]
+    
+    width = max(x) - min(x)
+    height = max(y) - min(y)
+    
+    shape_dim = shape_parameters['screen_position']
+    
+    width_ratio = (shape_dim + width)  / shape_dim
+    height_ratio = (shape_dim + height) / shape_dim
+    
+    return width_ratio, height_ratio
 
 
 """ Trial class """

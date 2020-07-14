@@ -30,7 +30,7 @@ import trial_class
 """ Set this variable to 'test' to run in test mode. The shapes are displayed
 on this monitor, rather than the external OLEDs. Set variable to 'trial'
 (or anyhting else != 'test') to run in trial mode - images will be displayed on OLEDS """
-run_type = 'trial'
+run_type = 'test'
 if run_type != 'test':
     participant_name = input('Participant name: ')
     trial_date = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
