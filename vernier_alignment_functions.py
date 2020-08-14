@@ -5,6 +5,8 @@ Created on Mon Dec  2 11:03:41 2019
 @author: Experimenter
 """
 
+
+import traceback, collections, json, random, os, csv, pdb
 import numpy as np
 import pandas as pd
 from psychopy import monitors, visual, event
@@ -12,8 +14,8 @@ import tkinter as tk
 from tkinter import filedialog
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
-import traceback, collections, json, random
 from tabulate import tabulate
+
 
 
 
@@ -91,26 +93,41 @@ def initialise_shapes(shape_parameters, run_type = 'test'):
         mon2 = monitors.Monitor('whiteOLED_1_SADK_luma1200')  
         
         """ Initialise windows  """
-        win1 = visual.Window()
-        win1.winType = "pyglet",
-        win1.screen = 0,
-        win1.color = shape_parameters['background_color']
-        try:
-            win1.monitor = mon1
-            win1.size = mon1.getSizePix()
-        except:
-            print('using default window size')
+        win1 = visual.Window(
+                monitor = mon1,
+                winType = "pyglet",
+                size = mon1.getSizePix(),
+                screen = 0,
+                color = shape_parameters['background_color'],
+                )
+#        win1.monitor = mon1
+#        win1.size = mon1.getSizePix()
+#        win1.winType = "pyglet"
+#        win1.screen = 0
+#        win1.color = shape_parameters['background_color']
+#        try:
+#            win1.monitor = mon1
+#            win1.size = mon1.getSizePix()
+#        except:
+#            print('using default window size')
+
             
                  
-        win2 = visual.Window()
-        win2.winType = "pyglet"
-        win2.screen = 1
-        win2.color = shape_parameters['background_color']
-        try:
-            win2.size = mon2.getSizePix()
-            win2.monitor = mon2
-        except:
-            print('using default window size')
+        win2 = visual.Window(
+                mointor = mon2,
+                winType = "pyglet",
+                size = mon2.getSizePix(),
+                screen = 1,
+                color = shape_parameters['background_color'],
+                )
+#        win2.winType = "pyglet"
+#        win2.screen = 1
+#        win2.color = shape_parameters['background_color']
+#        try:
+#            win2.size = mon2.getSizePix()
+#            win2.monitor = mon2
+#        except:
+#            print('using default window size')
             
         wins = [win1, win2]
         
@@ -224,6 +241,7 @@ def vernier_fit(x,y,p0,ax):
         return {'popt' : popt, 'pcov' : pcov}
     except Exception:
         traceback.print_exc()
+        pass
 
 
 def vernier_analysis(df, plot_title = 'title'):    
@@ -257,8 +275,57 @@ def offset_and_scale(orientations, fit_results, shape_parameters):
     width_ratio = (shape_dim + width)  / shape_dim
     height_ratio = (shape_dim + height) / shape_dim
     
-    return width_ratio, height_ratio
+    x0 = np.mean(x)
+    y0 = np.mean(y)
+    
+    return width_ratio, height_ratio, x0, y0
 
+def display_corrected(wins,x0,y0,dims = 500):
+    rect1 = visual.Rect(
+            wins[0],
+            units = 'pix',
+            width = dims,
+            height = dims,
+            )
+    
+    rect2 = visual.Rect(
+            wins[1],
+            units = 'pix',
+            width = dims,
+            height = dims,
+            pos = (-x0, -y0),
+            )
+    
+    return rect1, rect2
+    
+    
+    
+    
+
+
+def save_data(filepath, alignment_data, fit_results, trial_parameters, shape_parameters):
+    
+    os.mkdir(filepath)
+
+    alignment_data.to_csv(os.path.join(filepath,'alignment_data.csv'), sep = '\t')
+    
+    shape_parameters_file = os.path.join(filepath,'shape_parameters.csv')
+    with open(shape_parameters_file, 'w') as f:
+        w = csv.DictWriter(f, shape_parameters)
+        w.writeheader()
+        w.writerow(shape_parameters)
+        
+    trial_parameters_file = os.path.join(filepath,'trial_parameters.csv')
+    with open(trial_parameters_file, 'w') as f:
+        w = csv.DictWriter(f, trial_parameters)
+        w.writeheader()
+        w.writerow(trial_parameters)
+        
+    fit_results_file = os.path.join(filepath,'fit_results.csv')
+    with open(fit_results_file, 'w') as f:
+        w = csv.DictWriter(f, fit_results)
+        w.writeheader()
+        w.writerow(fit_results)
 
 """ Trial class """
 vernier_trial = collections.namedtuple('trial', ['orientation','offset'])

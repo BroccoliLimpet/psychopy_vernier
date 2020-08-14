@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 """
 Script to present pairs of lines to a subject that are slightly
@@ -16,7 +15,7 @@ Created on Thu Nov 21 15:13:17 2019
 @author: Tom Smart
 """
 
-import traceback, os, pyo, time
+import traceback, os, pyo, time, csv
 import numpy as np
 import pandas as pd
 from psychopy import event
@@ -30,7 +29,7 @@ import trial_class
 """ Set this variable to 'test' to run in test mode. The shapes are displayed
 on this monitor, rather than the external OLEDs. Set variable to 'trial'
 (or anyhting else != 'test') to run in trial mode - images will be displayed on OLEDS """
-run_type = 'test'
+run_type = 'trial'
 if run_type != 'test':
     participant_name = input('Participant name: ')
     trial_date = datetime.now().strftime("%d-%m-%Y %H-%M-%S")
@@ -50,12 +49,12 @@ shape_parameters['correction'] = [7, 7]
 
 """ Trial parameters """ 
 trial_parameters = {}
-offset_low = -15
-offset_high = 15
-offset_step_size = 5
+offset_low = -50
+offset_high = 50
+offset_step_size = 50
 trial_parameters['offsets'] = np.arange(offset_low, offset_high + offset_step_size, offset_step_size)
 trial_parameters['orientations'] = [0, 90, 180, 270]
-trial_parameters['nreps'] = 3 
+trial_parameters['nreps'] = 3
 
 
 """ Build trial list class - # uses purpose built 'vernier_trial_list' class"""
@@ -121,18 +120,41 @@ else:
                              })
     
         """ End trial """
-        [win.close() for win in wins]
+#        [win.close() for win in wins]
         soundserver.stop()
+        
         df = pd.DataFrame(trial_data)
         fit_results = {}
+        
         for orientation in trial_parameters['orientations']:
             fit_results[orientation] = funs.vernier_analysis(
                     df.sort_values('offset').loc[df['orientation'] == orientation], 
                     plot_title = str(orientation),
                     )
-        table = funs.tabulate_results(trial_parameters['orientations'], fit_results)
+        try:
+            table = funs.tabulate_results(trial_parameters['orientations'], fit_results)
+        except:
+            traceback.print_exc()
+            
+        width_ratio, height_ratio, x0, y0 = funs.offset_and_scale(
+                trial_parameters['orientations'], 
+                fit_results, 
+                shape_parameters,
+                )
+        
         if run_type != 'test':
-            df.to_csv(os.path.join(os.getcwd(),'data',file_name), sep = '\t')
+            filepath = os.path.join(os.getcwd(),'data',file_name)
+            funs.save_data(filepath, df, fit_results, trial_parameters, shape_parameters)
+        
+        rect1, rect2 = funs.display_corrected(wins, x0, y0)
+        rect1.draw()
+        rect2.draw()
+        [win.flip() for win in wins]
+        event.waitKeys()
+        [win.close() for win in wins]
+
+        
+        
     
     except Exception:
         """ Close windows """
