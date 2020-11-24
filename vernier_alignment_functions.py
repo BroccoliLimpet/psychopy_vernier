@@ -16,7 +16,45 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from tabulate import tabulate
 
+""" Trial class """
+vernier_trial = collections.namedtuple('trial', ['orientation','offset'])
 
+
+class vernier_trial_list:
+
+    """ Trial List class """
+    def __init__(self, orientations = np.array([0,90,180,270]), offsets = np.arange(-10,12,2), nreps = 1):
+        self.orientations = orientations
+        self.offsets = offsets
+        self._trials = [vernier_trial(orientation, offset) 
+                        for orientation in self.orientations 
+                        for offset in self.offsets]*nreps
+        
+    def __len__(self):
+        return len(self._trials)
+    
+    def __getitem__(self, position):
+        return self._trials[position]
+    
+    def __setitem__(self, position, trial):
+        self._trials[position] = trial
+        
+    def sort_by_offset(self):
+        self._trials = sorted(self, key = lambda trial : trial.offset)
+        
+    def shuffle_trials(self):
+        self.sort_by_offset()
+        new_list = []
+        new_trial_list = []
+        self.sort_by_offset()
+        for trial in self:
+            dups = np.nonzero(new_list == trial.orientation)
+            dups = np.concatenate([dups[0], dups[0] + 1])
+            non_dups = np.setdiff1d(np.arange(0, len(new_list)+1), dups)
+            new_pos = non_dups[random.randint(0, len(non_dups)-1)]
+            new_list = np.insert(new_list, new_pos, trial.orientation)
+            new_trial_list.insert(new_pos, vernier_trial(trial.orientation, trial.offset))
+        self._trials = new_trial_list
 
 
 def reflection_matrix():
@@ -100,16 +138,7 @@ def initialise_shapes(shape_parameters, run_type = 'test'):
                 screen = 0,
                 color = shape_parameters['background_color'],
                 )
-#        win1.monitor = mon1
-#        win1.size = mon1.getSizePix()
-#        win1.winType = "pyglet"
-#        win1.screen = 0
-#        win1.color = shape_parameters['background_color']
-#        try:
-#            win1.monitor = mon1
-#            win1.size = mon1.getSizePix()
-#        except:
-#            print('using default window size')
+
 
             
                  
@@ -120,14 +149,7 @@ def initialise_shapes(shape_parameters, run_type = 'test'):
                 screen = 1,
                 color = shape_parameters['background_color'],
                 )
-#        win2.winType = "pyglet"
-#        win2.screen = 1
-#        win2.color = shape_parameters['background_color']
-#        try:
-#            win2.size = mon2.getSizePix()
-#            win2.monitor = mon2
-#        except:
-#            print('using default window size')
+
             
         wins = [win1, win2]
         
@@ -327,132 +349,10 @@ def save_data(filepath, alignment_data, fit_results, trial_parameters, shape_par
         w.writeheader()
         w.writerow(fit_results)
 
-""" Trial class """
-vernier_trial = collections.namedtuple('trial', ['orientation','offset'])
 
-
-class vernier_trial_list:
-
-    """ Trial List class """
-    def __init__(self, orientations = np.array([0,90,180,270]), offsets = np.arange(-10,12,2), nreps = 1):
-        self.orientations = orientations
-        self.offsets = offsets
-        self._trials = [vernier_trial(orientation, offset) 
-                        for orientation in self.orientations 
-                        for offset in self.offsets]*nreps
-        
-    def __len__(self):
-        return len(self._trials)
-    
-    def __getitem__(self, position):
-        return self._trials[position]
-    
-    def __setitem__(self, position, trial):
-        self._trials[position] = trial
-        
-    def sort_by_offset(self):
-        self._trials = sorted(self, key = lambda trial : trial.offset)
-        
-    def shuffle_trials(self):
-        self.sort_by_offset()
-        new_list = []
-        new_trial_list = []
-        self.sort_by_offset()
-        for trial in self:
-            dups = np.nonzero(new_list == trial.orientation)
-            dups = np.concatenate([dups[0], dups[0] + 1])
-            non_dups = np.setdiff1d(np.arange(0, len(new_list)+1), dups)
-            new_pos = non_dups[random.randint(0, len(non_dups)-1)]
-            new_list = np.insert(new_list, new_pos, trial.orientation)
-            new_trial_list.insert(new_pos, vernier_trial(trial.orientation, trial.offset))
-        self._trials = new_trial_list
     
 
 
 
 
-# =============================================================================
-# """ Test functions """
-# 
-# if __name__ == '__main__':
-# 
-#     run_type = 'test'
-# 
-#     """ Shape (line) parameters """
-#     with open("default_shape_parameters.json","r") as read_file:
-#         shape_parameters = json.load(read_file)
-# 
-# 
-#     """ Trial parameters """ 
-#     with open("default_trial_parameters.json","r") as read_file:
-#         trial_parameters = json.load(read_file)
-# 
-# 
-#     """ Build trial list class - # uses purpose-built 'vernier_trial_list' class"""
-#     trial_list = vernier_trial_list(trial_parameters['orientations'],
-#                                                 trial_parameters['offsets'],
-#                                                 trial_parameters['nreps'],
-#                                                 )
-#     
-#     trial_list.shuffle_trials() 
-#     
-#     trial_data = []
-# 
-# 
-#     """ Initialise monitors, windows and shapes. A try/except/else structures 
-#     should prevent a window being presented if there is an error in set-up (aiming
-#     to avoid kernel death!) """
-#     try:
-#         wins, line1, line2, shape_parameters = initialise_shapes(shape_parameters, 
-#                                                                  run_type)
-# 
-#     except Exception:
-#         traceback.print_exc()
-# 
-#     else:
-#         
-#         """ Trial starts here """
-#         try:
-#             for trial in trial_list:
-#                 line1, line2 = update_shapes(line1, 
-#                                              line2, 
-#                                              shape_parameters, 
-#                                              trial.orientation, 
-#                                              trial.offset, 
-#                                              run_type)
-#                 line1.draw()
-#                 line2.draw()
-#                 [win.flip() for win in wins]
-#                 
-#                 key_choice = event.waitKeys()                
-# 
-#                 
-#                 if key_choice[0] == 'escape':
-#                     break
-#                 else:
-#                     trial_data.append({'orientation' : trial.orientation,
-#                                  'offset' : trial.offset,
-#                                  'key_choice' : key_choice[0]
-#                                  })
-#                 
-#                 df = pd.DataFrame(trial_data)
-#                 fit_results = {}
-#                 
-#                 for orientation in trial_parameters['orientations']:
-#                     fit_results[orientation] = vernier_analysis(
-#                             df.sort_values('offset').loc[df['orientation'] == orientation], 
-#                             plot_title = str(orientation),
-#                             )
-#                     
-#                 table = tabulate_results(trial_parameters['orientations'], fit_results)
-#                 
-#         
-#             """ End trial """
-#             [win.close() for win in wins]
-# 
-#         
-#         except Exception:
-#             """ Close windows """
-#             [win.close() for win in wins]
-#             traceback.print_exc()
-# =============================================================================
+
