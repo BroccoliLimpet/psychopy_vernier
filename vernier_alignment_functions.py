@@ -26,7 +26,7 @@ vernier_trial = collections.namedtuple('trial', ['orientation','offset'])
 
 
 """ Trial List class """
-# a list of 'vernier_trial' classes, with functionality to sort into a semi-random order where an orientation is not repeated consecutively
+# a class that contains a list of 'vernier_trial' classes, with functionality to sort into a semi-random order where an orientation is not repeated consecutively
 
 class vernier_trial_list:
     
@@ -37,18 +37,24 @@ class vernier_trial_list:
                         for orientation in self.orientations 
                         for offset in self.offsets]*nreps
         
+    # add len() functionality
     def __len__(self):
         return len(self._trials)
     
+    # add indexing
+    # get item
     def __getitem__(self, position):
         return self._trials[position]
     
+    # set item
     def __setitem__(self, position, trial):
         self._trials[position] = trial
         
+    # sort trials by offset amount
     def sort_by_offset(self):
         self._trials = sorted(self, key = lambda trial : trial.offset)
         
+    # shuffle trials into a semi-random order where the orientation does not repeat consecutively
     def shuffle_trials(self):
         self.sort_by_offset()
         new_list = []
@@ -322,21 +328,23 @@ def offset_and_scale(orientations, fit_results, shape_parameters):
     
     return width_ratio, height_ratio, x0, y0
 
-def display_corrected(wins,x0,y0,dims = 500):
-    rect1 = visual.Rect(
-            wins[0],
-            units = 'pix',
-            width = dims,
-            height = dims,
-            )
+def display_corrected(wins,x0,y0,dims = 500,run_type='test'):
     
-    rect2 = visual.Rect(
-            wins[1],
-            units = 'pix',
-            width = dims,
-            height = dims,
-            pos = (-x0, -y0),
-            )
+    if trial_type != 'test':
+        rect1 = visual.Rect(
+                wins[0],
+                units = 'pix',
+                width = dims,
+                height = dims,
+                )
+        
+        rect2 = visual.Rect(
+                wins[1],
+                units = 'pix',
+                width = dims,
+                height = dims,
+                pos = (-x0, -y0),
+                )
     
     return rect1, rect2
     
