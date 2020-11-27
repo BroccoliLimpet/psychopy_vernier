@@ -2,11 +2,13 @@
 """
 Created on Mon Dec  2 11:03:41 2019
 
+Functions and classes for vernier_alignment.py
+
 @author: Experimenter
 """
 
 
-import traceback, collections, json, random, os, csv, pdb
+import traceback, unittest, collections, json, random, os, csv, pdb
 import numpy as np
 import pandas as pd
 from psychopy import monitors, visual, event
@@ -16,13 +18,18 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from tabulate import tabulate
 
+
+
 """ Trial class """
+# A named tuple with fields 'orientation' and 'offset'. This contains the parameter for an individual trial
 vernier_trial = collections.namedtuple('trial', ['orientation','offset'])
 
 
-class vernier_trial_list:
+""" Trial List class """
+# a list of 'vernier_trial' classes, with functionality to sort into a semi-random order where an orientation is not repeated consecutively
 
-    """ Trial List class """
+class vernier_trial_list:
+    
     def __init__(self, orientations = np.array([0,90,180,270]), offsets = np.arange(-10,12,2), nreps = 1):
         self.orientations = orientations
         self.offsets = offsets
@@ -55,7 +62,20 @@ class vernier_trial_list:
             new_list = np.insert(new_list, new_pos, trial.orientation)
             new_trial_list.insert(new_pos, vernier_trial(trial.orientation, trial.offset))
         self._trials = new_trial_list
+        
+    
+        
 
+class test_trialList(unittest.TestCase):
+
+    def test_sum(self):
+        self.assertEqual(sum([1, 2, 3]), 6, "Should be 6")
+
+    def test_sum_tuple(self):
+        self.assertEqual(sum((1, 2, 2)), 6, "Should be 6")
+
+if __name__ == '__main__':
+    unittest.main()
 
 def reflection_matrix():
     """ creates a matrix that reflects in the x = 0 axis"""
