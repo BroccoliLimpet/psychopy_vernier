@@ -69,19 +69,6 @@ class vernier_trial_list:
             new_trial_list.insert(new_pos, vernier_trial(trial.orientation, trial.offset))
         self._trials = new_trial_list
         
-    
-        
-
-class test_trialList(unittest.TestCase):
-
-    def test_sum(self):
-        self.assertEqual(sum([1, 2, 3]), 6, "Should be 6")
-
-    def test_sum_tuple(self):
-        self.assertEqual(sum((1, 2, 2)), 6, "Should be 6")
-
-if __name__ == '__main__':
-    unittest.main()
 
 def reflection_matrix():
     """ creates a matrix that reflects in the x = 0 axis"""
@@ -97,7 +84,7 @@ def rotation_matrix(theta):
 
 def initialise_shapes(shape_parameters, run_type = 'test'):
     
-    """ """
+    """ sets up windows and shapes for the trial"""
     
     if run_type == 'test':
         win = visual.Window(screen = 0,
@@ -201,7 +188,7 @@ def initialise_shapes(shape_parameters, run_type = 'test'):
 
 def update_shapes(shape1, shape2, shape_parameters, orientation = 0, offset = 0, run_type = 'test'):
     
-    """ """
+    """ This function is used during the trial to update the positions according to the trial parameters """
     
     
     rotate_mat = rotation_matrix(np.radians(orientation))
@@ -330,7 +317,7 @@ def offset_and_scale(orientations, fit_results, shape_parameters):
 
 def display_corrected(wins,x0,y0,dims = 500,run_type='test'):
     
-    if trial_type != 'test':
+    if run_type != 'test':
         rect1 = visual.Rect(
                 wins[0],
                 units = 'pix',
